@@ -37,6 +37,16 @@ uvicorn app.main:app --reload --port 8000
 API: http://localhost:8000  
 Документация: http://localhost:8000/docs  
 
+#### Тесты
+
+```bash
+cd backend
+pip install -r requirements.txt   # pytest, httpx, aiosqlite уже в requirements
+pytest tests/ -v
+```
+
+Тесты используют SQLite in-memory, PostgreSQL не нужен.
+
 ### 3. Frontend
 
 ```bash

@@ -87,7 +87,8 @@ class WishlistItemResponse(BaseModel):
     price: Decimal | None
     image_url: str | None
     sort_order: int
-    is_reserved: bool  # Создатель видит только флаг, без имени резервировавшего
+    is_reserved: bool
+    total_contributed: Decimal = Decimal("0")  # Сумма вкладов; владелец не видит кто сколько
     created_at: datetime
 
     class Config:
@@ -120,6 +121,31 @@ class ReservationCreatedResponse(BaseModel):
     """Ответ после успешной резервации — сохраните reserver_secret для доступа."""
     reserver_secret: str
     message: str = "Подарок зарезервирован. Сохраните ссылку для управления резервацией."
+
+
+# --- Contribution (скинуться) ---
+class ContributionCreate(BaseModel):
+    contributor_name: str = Field(description="Ваше имя (видно только вам)")
+    amount: Decimal = Field(gt=0, description="Сумма вклада")
+
+    model_config = {"json_schema_extra": {"examples": [{"contributor_name": "Маша", "amount": 50}]}}
+
+
+class ContributionResponse(BaseModel):
+    id: int
+    wishlist_item_id: int
+    contributor_name: str
+    amount: Decimal
+    contributed_at: datetime
+    item_title: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ContributionCreatedResponse(BaseModel):
+    contributor_secret: str
+    message: str = "Вклад добавлен. Сохраните ссылку для просмотра или отмены."
 
 
 # --- Public view (для друзей по ссылке) ---

@@ -1,19 +1,23 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Provider } from 'react-redux'
 import App from './App'
-import { AuthProvider } from '@/contexts/auth-context'
+import { AuthInit } from '@/components/auth-init'
 import { I18nProvider } from '@/contexts/i18n-context'
 import { ThemeProvider } from '@/contexts/theme-context'
+import { store } from '@/store'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <I18nProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </ThemeProvider>
-    </I18nProvider>
+    <Provider store={store}>
+      <I18nProvider>
+        <ThemeProvider>
+          <AuthInit>
+            <App />
+          </AuthInit>
+        </ThemeProvider>
+      </I18nProvider>
+    </Provider>
   </StrictMode>,
 )

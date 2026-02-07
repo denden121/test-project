@@ -64,6 +64,30 @@ class WishlistItem(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    contributions: Mapped[list["Contribution"]] = relationship(
+        "Contribution",
+        back_populates="item",
+        cascade="all, delete-orphan",
+    )
+
+
+class Contribution(Base):
+    """
+    Вклад в подарок (скинуться). Владелец вишлиста видит только сумму по товару,
+    не видит кто сколько скинул.
+    """
+    __tablename__ = "contributions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    wishlist_item_id: Mapped[int] = mapped_column(
+        ForeignKey("wishlist_items.id", ondelete="CASCADE"),
+    )
+    contributor_name: Mapped[str] = mapped_column(String(255))
+    contributor_secret: Mapped[str] = mapped_column(String(64), default=generate_slug, index=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    contributed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    item: Mapped["WishlistItem"] = relationship("WishlistItem", back_populates="contributions")
 
 
 class Reservation(Base):

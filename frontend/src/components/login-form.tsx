@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import axios from 'axios'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/hooks/use-auth'
 import { useI18n } from '@/contexts/i18n-context'
 
 type LoginFormValues = {
@@ -39,8 +38,8 @@ export function LoginForm() {
       await login(data.email, data.password)
     } catch (err: unknown) {
       const msg =
-        axios.isAxiosError(err) && err.response?.data?.detail
-          ? String(err.response.data.detail)
+        err && typeof err === 'object' && 'data' in err && (err as { data?: { detail?: string } }).data?.detail
+          ? String((err as { data: { detail: string } }).data.detail)
           : err instanceof Error
             ? err.message
             : t('auth.error')

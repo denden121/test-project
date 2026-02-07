@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routers import auth, health, items, reservations, wishlists
+from app.routers import auth, contributions, health, items, reservations, wishlists
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,10 @@ OPENAPI_TAGS = [
     {
         "name": "reservations",
         "description": "Резервации подарков. Просмотр и отмена по **reserver_secret** после резервирования.",
+    },
+    {
+        "name": "contributions",
+        "description": "Вклады «скинуться». Просмотр и отмена по **contributor_secret**. Владелец видит только сумму.",
     },
     {"name": "auth", "description": "Регистрация и авторизация."},
     {"name": "health", "description": "Проверка доступности API."},
@@ -67,6 +71,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(items.router, prefix="/api/items", tags=["items"])
 app.include_router(wishlists.router, prefix="/api/wishlists", tags=["wishlists"])
 app.include_router(reservations.router, prefix="/api/reservations", tags=["reservations"])
+app.include_router(contributions.router, prefix="/api/contributions", tags=["contributions"])
 
 
 @app.get("/")

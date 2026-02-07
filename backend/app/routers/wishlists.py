@@ -3,9 +3,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from decimal import Decimal
+
 from app.database import get_db
-from app.models import Wishlist, WishlistItem, Reservation
+from app.models import Wishlist, WishlistItem, Reservation, Contribution
 from app.schemas import (
+    ContributionCreate,
+    ContributionCreatedResponse,
     ReservationCreate,
     ReservationCreatedResponse,
     WishlistCreate,
@@ -21,8 +25,14 @@ from app.schemas import (
 router = APIRouter()
 
 
+def _total_contributed(item: WishlistItem) -> Decimal:
+    if not item.contributions:
+        return Decimal("0")
+    return sum((c.amount for c in item.contributions), Decimal("0"))
+
+
 def item_to_response(item: WishlistItem) -> WishlistItemResponse:
-    """Преобразует WishlistItem в response с is_reserved (без имени резервировавшего)."""
+    """Преобразует WishlistItem в response; владелец не видит кто скинулся."""
     return WishlistItemResponse(
         id=item.id,
         wishlist_id=item.wishlist_id,
@@ -32,6 +42,7 @@ def item_to_response(item: WishlistItem) -> WishlistItemResponse:
         image_url=item.image_url,
         sort_order=item.sort_order,
         is_reserved=item.reservation is not None,
+        total_contributed=_total_contributed(item),
         created_at=item.created_at,
     )
 
@@ -52,7 +63,9 @@ async def create_wishlist(data: WishlistCreate, db: AsyncSession = Depends(get_d
 async def get_wishlist_public(slug: str, db: AsyncSession = Depends(get_db)):
     """Публичный вид списка по slug. Видят друзья — могут резервировать подарки."""
     result = await db.execute(
-        select(Wishlist).where(Wishlist.slug == slug).options(selectinload(Wishlist.items))
+        select(Wishlist)
+        .where(Wishlist.slug == slug)
+        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -70,7 +83,7 @@ async def get_wishlist_by_secret(creator_secret: str, db: AsyncSession) -> Wishl
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.creator_secret == creator_secret)
-        .options(selectinload(Wishlist.items))
+        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -210,7 +223,7 @@ async def reserve_item(
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.slug == slug)
-        .options(selectinload(Wishlist.items))
+        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -231,3 +244,46 @@ async def reserve_item(
     await db.refresh(reservation)
 
     return ReservationCreatedResponse(reserver_secret=reservation.reserver_secret)
+
+
+# --- Скинуться (публично по slug) ---
+@router.post(
+    "/s/{slug}/items/{item_id}/contribute",
+    response_model=ContributionCreatedResponse,
+)
+async def contribute_item(
+    slug: str,
+    item_id: int,
+    data: ContributionCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Добавить вклад в подарок. Владелец видит только общую сумму по товару, не кто сколько скинул.
+    """
+    result = await db.execute(
+        select(Wishlist)
+        .where(Wishlist.slug == slug)
+        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
+    )
+    wishlist = result.scalar_one_or_none()
+    if not wishlist:
+        raise HTTPException(status_code=404, detail="Список не найден")
+
+    item = next((i for i in wishlist.items if i.id == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    if item.reservation:
+        raise HTTPException(status_code=400, detail="Подарок уже зарезервирован целиком")
+    if item.price is None or item.price <= 0:
+        raise HTTPException(status_code=400, detail="У товара не указана цена для сбора")
+
+    contribution = Contribution(
+        wishlist_item_id=item.id,
+        contributor_name=data.contributor_name,
+        amount=data.amount,
+    )
+    db.add(contribution)
+    await db.flush()
+    await db.refresh(contribution)
+
+    return ContributionCreatedResponse(contributor_secret=contribution.contributor_secret)
