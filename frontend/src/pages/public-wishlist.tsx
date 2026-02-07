@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useWebSocket } from 'react-use-websocket'
+import useWebSocket from 'react-use-websocket'
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -63,7 +63,7 @@ export function PublicWishlist() {
         : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${API_URL}/wishlists/ws/${slug}`
 
   useWebSocket(wsUrl, {
-    onMessage: (e) => {
+    onMessage: (e: MessageEvent) => {
       try {
         const data = JSON.parse(e.data) as WishlistPublicResponse
         setWishlist(data)
