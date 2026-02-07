@@ -2,6 +2,7 @@
 
 [![Tests (backend)](https://github.com/denden121/test-project/actions/workflows/test.yml/badge.svg)](https://github.com/denden121/test-project/actions/workflows/test.yml)
 [![E2E (Playwright)](https://github.com/denden121/test-project/actions/workflows/e2e.yml/badge.svg)](https://github.com/denden121/test-project/actions/workflows/e2e.yml)
+[![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=denden121_test-project&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=denden121_test-project)
 
 Стек: **React** (frontend) + **FastAPI** (backend) + **PostgreSQL**.
 
@@ -64,6 +65,10 @@ npm run e2e
 Локально можно не поднимать серверы вручную: без `CI` Playwright сам запустит `npm run dev` (прокси на бэкенд). Для запросов к API из тестов задайте `API_URL=http://localhost:8000` при необходимости.
 
 В CI (GitHub Actions) используется workflow `.github/workflows/e2e.yml`: поднимаются бэкенд (SQLite in-memory) и фронт, затем запускаются тесты Playwright.
+
+#### SonarCloud
+
+Анализ кода в [SonarCloud](https://sonarcloud.io): проект `denden121_test-project`, организация `denden121`. Конфиг — `sonar-project.properties`, workflow — `.github/workflows/sonarcloud.yml`. В настройках репозитория GitHub добавьте секрет **SONAR_TOKEN** (токен из SonarCloud: Account → Security → Generate Tokens).
 
 ### 3. Frontend
 
