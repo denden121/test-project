@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Contribution
+from app.models import Contribution, WishlistItem
+from app.routers.wishlists import broadcast_wishlist_update
 from app.schemas import ContributionResponse
 
 router = APIRouter()
@@ -40,11 +41,16 @@ async def cancel_contribution(
 ):
     """Отменить свой вклад."""
     result = await db.execute(
-        select(Contribution).where(Contribution.contributor_secret == contributor_secret)
+        select(Contribution)
+        .where(Contribution.contributor_secret == contributor_secret)
+        .options(selectinload(Contribution.item).selectinload(WishlistItem.wishlist))
     )
     contribution = result.scalar_one_or_none()
     if not contribution:
         raise HTTPException(status_code=404, detail="Вклад не найден")
 
+    slug = contribution.item.wishlist.slug
     await db.delete(contribution)
+    await db.flush()
+    await broadcast_wishlist_update(slug, db)
     return None

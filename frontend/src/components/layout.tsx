@@ -30,7 +30,11 @@ export function Layout() {
                   {t('auth.logout')}
                 </Button>
               </>
-            ) : null}
+            ) : (
+              <Button size="sm" asChild>
+                <Link to="/login">{t('auth.login')}</Link>
+              </Button>
+            )}
             <LanguageSwitcher />
             <ThemeToggle />
           </nav>

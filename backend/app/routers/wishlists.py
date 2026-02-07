@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from decimal import Decimal
 
 from app.database import get_db
+from app.ws_manager import manager
 from app.models import Wishlist, WishlistItem, Reservation, Contribution
 from app.schemas import (
     ContributionCreate,
@@ -56,6 +57,49 @@ async def create_wishlist(data: WishlistCreate, db: AsyncSession = Depends(get_d
     await db.flush()
     await db.refresh(wishlist)
     return wishlist
+
+
+async def _get_wishlist_public_dict(slug: str, db: AsyncSession) -> dict | None:
+    """Загружает вишлист и возвращает данные для публичного ответа (для broadcast)."""
+    result = await db.execute(
+        select(Wishlist)
+        .where(Wishlist.slug == slug)
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
+    )
+    wishlist = result.scalar_one_or_none()
+    if not wishlist:
+        return None
+    resp = WishlistPublicResponse(
+        id=wishlist.id,
+        title=wishlist.title,
+        slug=wishlist.slug,
+        items=[item_to_response(i) for i in wishlist.items],
+    )
+    return resp.model_dump(mode="json")
+
+
+async def broadcast_wishlist_update(slug: str, db: AsyncSession) -> None:
+    """Broadcast обновлённого вишлиста всем подписчикам по slug."""
+    data = await _get_wishlist_public_dict(slug, db)
+    if data:
+        await manager.broadcast_wishlist(slug, data)
+
+
+# --- WebSocket для реалтайм-обновлений ---
+@router.websocket("/ws/{slug}")
+async def wishlist_websocket(websocket: WebSocket, slug: str):
+    """Подписка на обновления вишлиста по slug (резервации, вклады)."""
+    await manager.connect(websocket, slug)
+    try:
+        while True:
+            await websocket.receive_text()  # держим соединение
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await manager.disconnect(websocket, slug)
 
 
 # --- Публичный просмотр (для друзей по ссылке) ---
@@ -243,6 +287,10 @@ async def reserve_item(
     await db.flush()
     await db.refresh(reservation)
 
+    data = await _get_wishlist_public_dict(slug, db)
+    if data:
+        await manager.broadcast_wishlist(slug, data)
+
     return ReservationCreatedResponse(reserver_secret=reservation.reserver_secret)
 
 
@@ -285,5 +333,9 @@ async def contribute_item(
     db.add(contribution)
     await db.flush()
     await db.refresh(contribution)
+
+    data = await _get_wishlist_public_dict(slug, db)
+    if data:
+        await manager.broadcast_wishlist(slug, data)
 
     return ContributionCreatedResponse(contributor_secret=contribution.contributor_secret)

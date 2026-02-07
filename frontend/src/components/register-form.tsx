@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +23,7 @@ type RegisterFormValues = {
 
 export function RegisterForm() {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const { register: registerUser } = useAuth()
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -40,6 +42,7 @@ export function RegisterForm() {
     setApiError(null)
     try {
       await registerUser(data.email, data.password)
+      navigate('/', { replace: true })
     } catch (err: unknown) {
       const msg =
         err && typeof err === 'object' && 'data' in err && (err as { data?: { detail?: string } }).data?.detail

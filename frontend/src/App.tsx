@@ -1,5 +1,6 @@
 import { Navigate, Route, BrowserRouter, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
+import { Landing } from '@/pages/landing'
 import { LoginPage } from '@/pages/login-page'
 import { Dashboard } from '@/pages/dashboard'
 import { CreateWishlist } from '@/pages/create-wishlist'
@@ -12,13 +13,13 @@ import { useAuth } from '@/hooks/use-auth'
 function HomeOrDashboard() {
   const { token, loading } = useAuth()
   if (loading) return <p className="text-muted-foreground">...</p>
-  return token ? <Dashboard /> : <LoginPage />
+  return token ? <Dashboard /> : <Landing />
 }
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { token, loading } = useAuth()
   if (loading) return null
-  if (!token) return <Navigate to="/" replace />
+  if (!token) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
@@ -28,6 +29,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomeOrDashboard />} />
+          <Route path="login" element={<LoginPage />} />
           <Route
             path="wishlists/new"
             element={

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +22,7 @@ type LoginFormValues = {
 
 export function LoginForm() {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const { login } = useAuth()
   const [apiError, setApiError] = useState<string | null>(null)
 
@@ -36,6 +38,7 @@ export function LoginForm() {
     setApiError(null)
     try {
       await login(data.email, data.password)
+      navigate('/', { replace: true })
     } catch (err: unknown) {
       const msg =
         err && typeof err === 'object' && 'data' in err && (err as { data?: { detail?: string } }).data?.detail

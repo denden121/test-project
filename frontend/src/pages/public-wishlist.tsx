@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useWebSocket } from 'react-use-websocket'
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
@@ -48,6 +49,30 @@ export function PublicWishlist() {
       .catch((e) => setError(e.response?.data?.detail ?? e.message))
       .finally(() => setLoading(false))
   }, [slug])
+
+  const wsUrl =
+    !slug
+      ? null
+      : API_URL.startsWith('http')
+        ? (() => {
+            const u = new URL(API_URL)
+            const proto = u.protocol === 'https:' ? 'wss' : 'ws'
+            const path = u.pathname.replace(/\/$/, '') || ''
+            return `${proto}://${u.host}${path}/wishlists/ws/${slug}`
+          })()
+        : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${API_URL}/wishlists/ws/${slug}`
+
+  useWebSocket(wsUrl, {
+    onMessage: (e) => {
+      try {
+        const data = JSON.parse(e.data) as WishlistPublicResponse
+        setWishlist(data)
+      } catch {
+        /* ignore */
+      }
+    },
+    shouldReconnect: () => true,
+  })
 
   const onReserve = async (itemId: number, data: ReserveFormValues) => {
     if (!slug) return

@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Reservation
+from app.models import Reservation, WishlistItem
+from app.routers.wishlists import broadcast_wishlist_update
 from app.schemas import ReservationResponse
 
 router = APIRouter()
@@ -39,11 +40,16 @@ async def cancel_reservation(
 ):
     """Отменить свою резервацию."""
     result = await db.execute(
-        select(Reservation).where(Reservation.reserver_secret == reserver_secret)
+        select(Reservation)
+        .where(Reservation.reserver_secret == reserver_secret)
+        .options(selectinload(Reservation.item).selectinload(WishlistItem.wishlist))
     )
     reservation = result.scalar_one_or_none()
     if not reservation:
         raise HTTPException(status_code=404, detail="Резервация не найдена")
 
+    slug = reservation.item.wishlist.slug
     await db.delete(reservation)
+    await db.flush()
+    await broadcast_wishlist_update(slug, db)
     return None
