@@ -1,5 +1,8 @@
 # Test Project
 
+[![Tests (backend)](https://github.com/denden121/test-project/actions/workflows/test.yml/badge.svg)](https://github.com/denden121/test-project/actions/workflows/test.yml)
+[![E2E (Playwright)](https://github.com/denden121/test-project/actions/workflows/e2e.yml/badge.svg)](https://github.com/denden121/test-project/actions/workflows/e2e.yml)
+
 Стек: **React** (frontend) + **FastAPI** (backend) + **PostgreSQL**.
 
 Подходит для деплоя фронта на [Vercel](https://vercel.com); бэкенд и БД — на Railway, Render, Neon или Vercel Postgres.
