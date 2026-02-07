@@ -23,20 +23,6 @@ jobs:
         run: pip install -r requirements.txt
         working-directory: backend
 
-      - name: Start backend
-        run: |
-          export DATABASE_URL="sqlite+aiosqlite:///:memory:"
-          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          echo $! > backend.pid
-        working-directory: backend
-
-      - name: Wait for backend
-        run: |
-          for i in $(seq 1 30); do
-            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/health && break
-            sleep 1
-          done
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -52,21 +38,46 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: frontend
 
-      - name: Start frontend
-        run: npm run dev &
-        working-directory: frontend
-
-      - name: Wait for frontend
+      - name: Start servers and run E2E
         run: |
+          cd backend
+          export DATABASE_URL="sqlite+aiosqlite:///:memory:"
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          BACKEND_PID=$!
+          cd ..
+
+          echo "Waiting for backend..."
           for i in $(seq 1 30); do
-            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000 && break
+            if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/health | grep -q 200; then
+              echo "Backend is up"
+              break
+            fi
             sleep 1
           done
 
-      - name: Run Playwright tests
-        run: npm run e2e
-        working-directory: frontend
-        env:
-          CI: true
-          API_URL: http://127.0.0.1:8000
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          cd frontend
+          npm run dev &
+          FRONTEND_PID=$!
+          cd ..
+
+          echo "Waiting for frontend..."
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000 | grep -q 200; then
+              echo "Frontend is up"
+              sleep 2
+              break
+            fi
+            sleep 1
+          done
+
+          cd frontend
+          export CI=true
+          export API_URL=http://127.0.0.1:8000
+          export PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000
+          npm run e2e
+          E2E_EXIT=$?
+
+          kill $FRONTEND_PID 2>/dev/null || true
+          kill $BACKEND_PID 2>/dev/null || true
+          exit $E2E_EXIT
+        working-directory: .
