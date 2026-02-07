@@ -59,17 +59,34 @@ npm run dev
 
 В `vercel.json` уже заданы `buildCommand`, `outputDirectory` и `installCommand` для папки `frontend`.
 
-### Бэкенд (Railway / Render / Fly.io)
+### Бэкенд: как развернуть (Railway)
 
-- Разверните папку `backend/` как Python-сервис.
-- Укажите команду: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-- Добавьте переменную `DATABASE_URL` (PostgreSQL).  
-  Для **Vercel Postgres** или **Neon** скопируйте connection string и при необходимости замените схему на `postgresql+asyncpg://...` (для SQLAlchemy async).
+1. Зайдите на [railway.app](https://railway.app), войдите через GitHub.
+2. **New Project** → **Deploy from GitHub repo** → выберите `denden121/test-project`.
+3. В проекте нажмите на созданный сервис → **Settings**:
+   - **Root Directory**: укажите `backend`.
+   - **Build Command**: `pip install -r requirements.txt` (или оставьте авто).
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+4. **Variables** → добавьте переменную:
+   - `DATABASE_URL` — connection string PostgreSQL (см. ниже).
+5. База на Railway: в том же проекте **New** → **Database** → **PostgreSQL**. Railway создаст БД и добавит `DATABASE_URL` в переменные. Для SQLAlchemy async строка должна быть вида `postgresql+asyncpg://...` — если скопировали `postgresql://...`, замените в начале на `postgresql+asyncpg://`.
+6. **Deploy**. После деплоя возьмите **Public URL** (например `https://test-project-production-xxx.up.railway.app`).
+7. В настройках фронта на Vercel добавьте переменную **VITE_API_URL** = этот URL (без слэша в конце) и пересоберите фронт.
+
+Тестовая ручка: `GET /api/test` — возвращает `{ "message": "Test OK", "timestamp": "...", "source": "backend" }`. Фронт дергает её при загрузке и по кнопке «Обновить».
+
+### Бэкенд на Render
+
+- **New** → **Web Service**, подключите репозиторий.
+- **Root Directory**: `backend`.
+- **Build**: `pip install -r requirements.txt`.
+- **Start**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+- Добавьте **Environment Variable** `DATABASE_URL` (PostgreSQL можно создать в Render же: **New** → **PostgreSQL**).
 
 ### База данных
 
-- **Vercel Postgres** или **Neon**: создайте проект, скопируйте `DATABASE_URL` в настройки бэкенда.
-- Либо любой другой PostgreSQL (Railway, Render, Supabase и т.д.).
+- **Railway / Render**: создать PostgreSQL в том же проекте и подставить `DATABASE_URL` (для async драйвера используйте `postgresql+asyncpg://...`).
+- **Neon** или **Vercel Postgres**: скопируйте connection string и при необходимости замените схему на `postgresql+asyncpg://...`.
 
 ## Репозиторий
 

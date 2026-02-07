@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -9,6 +9,13 @@ class Settings(BaseSettings):
     )
 
     model_config = {"env_file": ".env"}
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def async_driver(cls, v: str) -> str:
+        if v and v.startswith("postgresql://") and "asyncpg" not in v:
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
 
 settings = Settings()
