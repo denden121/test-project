@@ -1,0 +1,38 @@
+export type Locale = 'ru' | 'en'
+
+export const translations: Record<Locale, Record<string, string>> = {
+  ru: {
+    'app.title': 'Test Project',
+    'app.subtitle': 'Frontend: React + Vite',
+    'app.backendHealth': 'Состояние бэкенда:',
+    'app.testEndpoint': 'Тестовая ручка:',
+    'app.apiError': 'Ошибка API:',
+    'app.refresh': 'Обновить',
+    'theme.light': 'Светлая',
+    'theme.dark': 'Тёмная',
+    'theme.system': 'Система',
+    'theme.systemDark': 'Система (тёмная)',
+    'theme.systemLight': 'Система (светлая)',
+    'theme.toggle': 'Переключить тему',
+    'lang.ru': 'Русский',
+    'lang.en': 'English',
+    'lang.switch': 'Язык',
+  },
+  en: {
+    'app.title': 'Test Project',
+    'app.subtitle': 'Frontend: React + Vite',
+    'app.backendHealth': 'Backend health:',
+    'app.testEndpoint': 'Test endpoint:',
+    'app.apiError': 'API error:',
+    'app.refresh': 'Refresh',
+    'theme.light': 'Light',
+    'theme.dark': 'Dark',
+    'theme.system': 'System',
+    'theme.systemDark': 'System (dark)',
+    'theme.systemLight': 'System (light)',
+    'theme.toggle': 'Toggle theme',
+    'lang.ru': 'Russian',
+    'lang.en': 'English',
+    'lang.switch': 'Language',
+  },
+}
