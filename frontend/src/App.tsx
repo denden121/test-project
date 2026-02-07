@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -16,12 +17,12 @@ export default function App() {
   const fetchApi = () => {
     setError(null)
     Promise.all([
-      fetch(`${API_URL}/health`).then((r) => r.json()),
-      fetch(`${API_URL}/test`).then((r) => r.json()),
+      axios.get<{ status: string }>(`${API_URL}/health`),
+      axios.get<TestResponse>(`${API_URL}/test`),
     ])
-      .then(([healthData, testResp]) => {
-        setHealth(healthData.status)
-        setTestData(testResp as TestResponse)
+      .then(([healthRes, testRes]) => {
+        setHealth(healthRes.data.status)
+        setTestData(testRes.data)
       })
       .catch((e) => setError(e.message))
   }

@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,10 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db
 from app.routers import health, items
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    try:
+        await init_db()
+    except Exception as e:
+        logger.warning("Database init skipped (unavailable): %s", e)
     yield
     # cleanup if needed
 
