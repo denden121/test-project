@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import type { User } from '@/store/slices/authSlice'
-
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+import { API_URL } from '@/lib/api'
 
 type LoginRequest = { email: string; password: string }
 type LoginResponse = { access_token: string; user: User }
@@ -9,7 +8,7 @@ type LoginResponse = { access_token: string; user: User }
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_URL}/auth`,
+    baseUrl: `${API_URL}/auth/`,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as { auth?: { token: string | null } }).auth?.token
       if (token) headers.set('Authorization', `Bearer ${token}`)
@@ -18,13 +17,13 @@ export const authApi = createApi({
   }),
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
-      query: (body) => ({ url: '/login', method: 'POST', body }),
+      query: (body) => ({ url: 'login', method: 'POST', body }),
     }),
     register: builder.mutation<LoginResponse, LoginRequest>({
-      query: (body) => ({ url: '/register', method: 'POST', body }),
+      query: (body) => ({ url: 'register', method: 'POST', body }),
     }),
     getMe: builder.query<User, void>({
-      query: () => ({ url: '/me' }),
+      query: () => ({ url: 'me' }),
     }),
   }),
 })
