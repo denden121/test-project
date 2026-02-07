@@ -1,0 +1,72 @@
+name: E2E (Playwright)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+        working-directory: backend
+
+      - name: Start backend
+        run: |
+          export DATABASE_URL="sqlite+aiosqlite:///:memory:"
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          echo $! > backend.pid
+        working-directory: backend
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/health && break
+            sleep 1
+          done
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Start frontend
+        run: npm run dev &
+        working-directory: frontend
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000 && break
+            sleep 1
+          done
+
+      - name: Run Playwright tests
+        run: npm run e2e
+        working-directory: frontend
+        env:
+          CI: true
+          API_URL: http://127.0.0.1:8000
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000

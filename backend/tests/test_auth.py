@@ -76,4 +76,4 @@ async def test_me_authenticated(client: AsyncClient):
 async def test_me_unauthorized(client: AsyncClient):
     """GET /me без токена — 401."""
     r = await client.get("/api/auth/me")
-    assert r.status_code == 403  # HTTPBearer returns 403 when missing
+    assert r.status_code == 401

@@ -109,7 +109,10 @@ async def get_wishlist_public(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.slug == slug)
-        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -127,7 +130,10 @@ async def get_wishlist_by_secret(creator_secret: str, db: AsyncSession) -> Wishl
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.creator_secret == creator_secret)
-        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -200,6 +206,16 @@ async def add_item(
     db.add(item)
     await db.flush()
     await db.refresh(item)
+    # Перезагружаем с relationships — иначе lazy load падает в async
+    result = await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.id == item.id)
+        .options(
+            selectinload(WishlistItem.reservation),
+            selectinload(WishlistItem.contributions),
+        )
+    )
+    item = result.scalar_one()
     return item_to_response(item)
 
 
@@ -227,6 +243,16 @@ async def update_item(
         setattr(item, k, v)
     await db.flush()
     await db.refresh(item)
+    # Перезагружаем с relationships — иначе lazy load падает в async
+    result = await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.id == item.id)
+        .options(
+            selectinload(WishlistItem.reservation),
+            selectinload(WishlistItem.contributions),
+        )
+    )
+    item = result.scalar_one()
     return item_to_response(item)
 
 
@@ -267,7 +293,10 @@ async def reserve_item(
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.slug == slug)
-        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:
@@ -311,7 +340,10 @@ async def contribute_item(
     result = await db.execute(
         select(Wishlist)
         .where(Wishlist.slug == slug)
-        .options(selectinload(Wishlist.items).selectinload(WishlistItem.contributions))
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
     )
     wishlist = result.scalar_one_or_none()
     if not wishlist:

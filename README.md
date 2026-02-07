@@ -47,6 +47,21 @@ pytest tests/ -v
 
 Тесты используют SQLite in-memory, PostgreSQL не нужен.
 
+#### E2E (Playwright)
+
+Запуск e2e-тестов (нужны запущенные бэкенд на :8000 и фронт на :3000):
+
+```bash
+cd frontend
+npm install
+npx playwright install --with-deps chromium   # один раз
+npm run e2e
+```
+
+Локально можно не поднимать серверы вручную: без `CI` Playwright сам запустит `npm run dev` (прокси на бэкенд). Для запросов к API из тестов задайте `API_URL=http://localhost:8000` при необходимости.
+
+В CI (GitHub Actions) используется workflow `.github/workflows/e2e.yml`: поднимаются бэкенд (SQLite in-memory) и фронт, затем запускаются тесты Playwright.
+
 ### 3. Frontend
 
 ```bash
