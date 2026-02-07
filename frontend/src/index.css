@@ -16,7 +16,7 @@
   --radius: 0.5rem;
 }
 
-/* Тёмная тема */
+/* Тёмная тема — переопределяем переменные при классе .dark на корне */
 .dark {
   --color-background: oklch(0.145 0 0);
   --color-foreground: oklch(0.965 0 0);
@@ -29,6 +29,37 @@
   --color-card: oklch(0.21 0 0);
   --color-card-foreground: oklch(0.965 0 0);
   --color-border: oklch(0.27 0 0);
+}
+
+/*
+ * Tailwind v4 подставляет цвета в утилиты «напрямую», а не через var().
+ * Переопределяем семантические утилиты, чтобы они читали переменные —
+ * тогда при .dark переменные меняются и тёмная тема применяется.
+ */
+@layer utilities {
+  .bg-background { background-color: var(--color-background); }
+  .bg-card { background-color: var(--color-card); }
+  .bg-muted { background-color: var(--color-muted); }
+  .bg-primary { background-color: var(--color-primary); }
+  .bg-destructive { background-color: var(--color-destructive); }
+  .text-foreground { color: var(--color-foreground); }
+  .text-card-foreground { color: var(--color-card-foreground); }
+  .text-muted-foreground { color: var(--color-muted-foreground); }
+  .text-primary { color: var(--color-primary); }
+  .text-primary-foreground { color: var(--color-primary-foreground); }
+  .text-destructive { color: var(--color-destructive); }
+  .text-destructive-foreground { color: var(--color-destructive-foreground); }
+  .border-border { border-color: var(--color-border); }
+  .hover\:bg-muted:hover { background-color: var(--color-muted); }
+  .hover\:bg-primary\/90:hover { background-color: color-mix(in oklch, var(--color-primary) 90%, transparent); }
+  .hover\:bg-primary:hover { background-color: var(--color-primary); }
+  .hover\:bg-destructive\/90:hover { background-color: color-mix(in oklch, var(--color-destructive) 90%, transparent); }
+  .hover\:bg-muted\/80:hover { background-color: color-mix(in oklch, var(--color-muted) 80%, transparent); }
+  .hover\:text-foreground:hover { color: var(--color-foreground); }
+  .focus-visible\:ring-primary:focus-visible { --tw-ring-color: var(--color-primary); }
+  .focus-visible\:ring-border:focus-visible { --tw-ring-color: var(--color-border); }
+  .focus-visible\:ring-muted:focus-visible { --tw-ring-color: var(--color-muted); }
+  .focus-visible\:ring-destructive:focus-visible { --tw-ring-color: var(--color-destructive); }
 }
 
 @layer base {
