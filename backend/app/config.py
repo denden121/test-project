@@ -7,6 +7,15 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://localhost:5432/test_project",
         validation_alias="DATABASE_URL",
     )
+    secret_key: str = Field(
+        default="change-me-in-production-use-env-SECRET_KEY",
+        validation_alias="SECRET_KEY",
+    )
+    algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=60 * 24 * 7,
+        validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
+    )
 
     model_config = {"env_file": ".env"}
 

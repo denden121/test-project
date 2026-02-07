@@ -11,6 +11,9 @@ import {
 } from '@/components/ui/card'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LoginForm } from '@/components/login-form'
+import { RegisterForm } from '@/components/register-form'
+import { useAuth } from '@/contexts/auth-context'
 import { useI18n } from '@/contexts/i18n-context'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
@@ -29,6 +32,8 @@ type TestResponse = {
 
 export default function App() {
   const { t } = useI18n()
+  const { token, user, loading, logout } = useAuth()
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
   const [health, setHealth] = useState<string | null>(null)
   const [testData, setTestData] = useState<TestResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -47,17 +52,63 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetchApi()
-  }, [])
+    if (token) fetchApi()
+  }, [token])
 
   const testParts = testData
     ? [testData.source, formatTimestamp(testData.timestamp)].filter(Boolean)
     : []
 
+  if (loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-background font-sans text-foreground">
+        <p className="text-muted-foreground">{t('auth.submitting')}</p>
+      </div>
+    )
+  }
+
+  if (!token) {
+    return (
+      <div className="min-h-svh bg-background p-6 font-sans text-foreground">
+        <div className="mx-auto max-w-md space-y-6">
+          <div className="flex justify-end gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={authTab === 'login' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setAuthTab('login')}
+            >
+              {t('auth.tabLogin')}
+            </Button>
+            <Button
+              type="button"
+              variant={authTab === 'register' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setAuthTab('register')}
+            >
+              {t('auth.tabRegister')}
+            </Button>
+          </div>
+          {authTab === 'login' ? <LoginForm /> : <RegisterForm />}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-svh bg-background p-6 font-sans text-foreground">
       <div className="mx-auto max-w-xl space-y-6">
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {user && (
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+          )}
+          <Button type="button" variant="outline" size="sm" onClick={logout}>
+            {t('auth.logout')}
+          </Button>
           <LanguageSwitcher />
           <ThemeToggle />
         </div>
