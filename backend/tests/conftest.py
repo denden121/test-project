@@ -10,14 +10,16 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from app.database import engine
+from app.database import engine, init_db
 from app.main import app
 
 
 @pytest.fixture(autouse=True)
 async def clean_db():
-    """Очистка БД перед каждым тестом для изоляции."""
+    """Создание таблиц (если нет) и очистка БД перед каждым тестом."""
+    await init_db()  # idempotent — создаёт таблицы только если их нет
     async with engine.begin() as conn:
+        await conn.execute(text("DELETE FROM contributions"))
         await conn.execute(text("DELETE FROM reservations"))
         await conn.execute(text("DELETE FROM wishlist_items"))
         await conn.execute(text("DELETE FROM wishlists"))
