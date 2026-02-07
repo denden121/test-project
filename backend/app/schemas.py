@@ -1,13 +1,17 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # --- Auth / User ---
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+
+    model_config = {"json_schema_extra": {"examples": [{"email": "user@example.com", "password": "secret123"}]}}
+
+
 
 
 class UserResponse(BaseModel):
@@ -27,7 +31,9 @@ class Token(BaseModel):
 
 # --- Wishlist ---
 class WishlistCreate(BaseModel):
-    title: str
+    title: str = Field(description="Название повода", examples=["День рождения", "Новый год"])
+
+    model_config = {"json_schema_extra": {"examples": [{"title": "День рождения"}]}}
 
 
 class WishlistResponse(BaseModel):
@@ -47,10 +53,23 @@ class WishlistManageResponse(WishlistResponse):
 
 # --- WishlistItem ---
 class WishlistItemCreate(BaseModel):
-    title: str
-    link: str | None = None
-    price: Decimal | None = None
-    image_url: str | None = None
+    title: str = Field(description="Название товара")
+    link: str | None = Field(None, description="Ссылка на товар")
+    price: Decimal | None = Field(None, description="Цена")
+    image_url: str | None = Field(None, description="URL картинки")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "title": "Наушники Sony",
+                    "link": "https://example.com/product/123",
+                    "price": 99.99,
+                    "image_url": "https://example.com/image.jpg",
+                }
+            ]
+        }
+    }
 
 
 class WishlistItemUpdate(BaseModel):
@@ -77,7 +96,12 @@ class WishlistItemResponse(BaseModel):
 
 # --- Reservation ---
 class ReservationCreate(BaseModel):
-    reserver_name: str  # "Маша" — как представиться (видно только резервировавшему)
+    reserver_name: str = Field(
+        description="Ваше имя (видно только вам при просмотре резервации)",
+        examples=["Маша"],
+    )
+
+    model_config = {"json_schema_extra": {"examples": [{"reserver_name": "Маша"}]}}
 
 
 class ReservationResponse(BaseModel):
@@ -86,11 +110,16 @@ class ReservationResponse(BaseModel):
     wishlist_item_id: int
     reserver_name: str
     reserved_at: datetime
-    # item details для удобства
     item_title: str | None = None
 
     class Config:
         from_attributes = True
+
+
+class ReservationCreatedResponse(BaseModel):
+    """Ответ после успешной резервации — сохраните reserver_secret для доступа."""
+    reserver_secret: str
+    message: str = "Подарок зарезервирован. Сохраните ссылку для управления резервацией."
 
 
 # --- Public view (для друзей по ссылке) ---
@@ -98,6 +127,12 @@ class WishlistPublicResponse(BaseModel):
     """Публичный вид списка — по slug, без creator_secret."""
     id: int
     title: str
+    slug: str
+    items: list[WishlistItemResponse]
+
+
+class WishlistManageDetailResponse(WishlistManageResponse):
+    """Полный вид для управления — создатель видит items с is_reserved (без имён)."""
     items: list[WishlistItemResponse]
 
 

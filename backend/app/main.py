@@ -5,9 +5,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routers import auth, health, items
+from app.routers import auth, health, items, reservations, wishlists
 
 logger = logging.getLogger(__name__)
+
+OPENAPI_TAGS = [
+    {
+        "name": "wishlists",
+        "description": "Списки желаний. Создание, просмотр, управление товарами. "
+        "**slug** — для шаринга друзьям. **creator_secret** — только создателю для редактирования.",
+    },
+    {
+        "name": "reservations",
+        "description": "Резервации подарков. Просмотр и отмена по **reserver_secret** после резервирования.",
+    },
+    {"name": "auth", "description": "Регистрация и авторизация."},
+    {"name": "health", "description": "Проверка доступности API."},
+    {"name": "items", "description": "Legacy эндпоинты (items)."},
+]
 
 
 @asynccontextmanager
@@ -21,8 +36,22 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Test Project API",
+    title="Wishlist API",
+    description="""
+API для списков желаний (вишлистов).
+
+## Сценарий использования
+1. **Создать список** → `POST /api/wishlists` — получите `slug` и `creator_secret`
+2. **Шаринг** — делитесь ссылкой `/wishlists/s/{slug}` с друзьями
+3. **Друзья** — смотрят список, резервируют подарки (чтобы не повторяться)
+4. **Создатель** — управляет списком по `creator_secret`, видит только флаг «зарезервировано» (без имён — сюрприз сохраняется)
+    """,
+    version="1.0.0",
+    openapi_tags=OPENAPI_TAGS,
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
 app.add_middleware(
@@ -36,6 +65,8 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(items.router, prefix="/api/items", tags=["items"])
+app.include_router(wishlists.router, prefix="/api/wishlists", tags=["wishlists"])
+app.include_router(reservations.router, prefix="/api/reservations", tags=["reservations"])
 
 
 @app.get("/")
