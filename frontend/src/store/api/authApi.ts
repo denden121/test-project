@@ -8,7 +8,7 @@ type LoginResponse = { access_token: string; user: User }
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_URL}/auth/`,
+    baseUrl: `${API_URL}/auth`,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as { auth?: { token: string | null } }).auth?.token
       if (token) headers.set('Authorization', `Bearer ${token}`)
