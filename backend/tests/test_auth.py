@@ -50,7 +50,7 @@ async def test_login_wrong_password(client: AsyncClient):
     )
     r = await client.post(
         "/api/auth/login",
-        json={"email": "login2@example.com", "password": "wrong"},
+        json={"email": "login2@example.com", "password": "wrongpass1"},
     )
     assert r.status_code == 401
 
