@@ -18,6 +18,7 @@ from app.schemas import (
     WishlistManageResponse,
     WishlistPublicResponse,
     WishlistResponse,
+    WishlistUpdate,
 )
 from app.services.websocket import ws_manager
 from app.services.wishlist import (
@@ -33,7 +34,11 @@ router = APIRouter()
 @router.post("", response_model=WishlistManageResponse)
 async def create_wishlist(data: WishlistCreate, db: AsyncSession = Depends(get_db)):
     """Создать список желаний. Возвращает slug (для шаринга) и creator_secret (сохраните!)."""
-    wishlist = Wishlist(title=data.title)
+    wishlist = Wishlist(
+        title=data.title,
+        occasion=data.occasion,
+        event_date=data.event_date,
+    )
     db.add(wishlist)
     await db.flush()
     await db.refresh(wishlist)
@@ -72,6 +77,8 @@ async def get_wishlist_public(slug: str, db: AsyncSession = Depends(get_db)):
     return WishlistPublicResponse(
         id=wishlist.id,
         title=wishlist.title,
+        occasion=wishlist.occasion,
+        event_date=wishlist.event_date,
         slug=wishlist.slug,
         items=[item_to_response(i) for i in wishlist.items],
     )
@@ -100,6 +107,8 @@ async def get_wishlist_manage(creator_secret: str, db: AsyncSession = Depends(ge
     return WishlistManageDetailResponse(
         id=wishlist.id,
         title=wishlist.title,
+        occasion=wishlist.occasion,
+        event_date=wishlist.event_date,
         slug=wishlist.slug,
         creator_secret=wishlist.creator_secret,
         created_at=wishlist.created_at,
@@ -109,11 +118,13 @@ async def get_wishlist_manage(creator_secret: str, db: AsyncSession = Depends(ge
 
 @router.patch("/m/{creator_secret}", response_model=WishlistManageResponse)
 async def update_wishlist(
-    creator_secret: str, data: WishlistCreate, db: AsyncSession = Depends(get_db)
+    creator_secret: str, data: WishlistUpdate, db: AsyncSession = Depends(get_db)
 ):
-    """Обновить название списка."""
+    """Обновить название, повод и дату списка."""
     wishlist = await get_wishlist_by_secret(creator_secret, db)
-    wishlist.title = data.title
+    update_data = data.model_dump(exclude_unset=True)
+    for k, v in update_data.items():
+        setattr(wishlist, k, v)
     await db.flush()
     await db.refresh(wishlist)
     return wishlist

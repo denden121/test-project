@@ -1,8 +1,8 @@
 import secrets
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -31,7 +31,9 @@ class Wishlist(Base):
     __tablename__ = "wishlists"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String(255))  # "День рождения", "Новый год" и т.д.
+    title: Mapped[str] = mapped_column(String(255))  # Название списка
+    occasion: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Повод: "День рождения", "Новый год"
+    event_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # Дата события
     slug: Mapped[str] = mapped_column(String(64), unique=True, default=generate_slug, index=True)
     creator_secret: Mapped[str] = mapped_column(String(64), default=generate_slug)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -4,6 +4,8 @@ export type StoredWishlist = {
   creator_secret: string
   slug: string
   title: string
+  occasion?: string | null
+  event_date?: string | null
 }
 
 export function getStoredWishlists(): StoredWishlist[] {

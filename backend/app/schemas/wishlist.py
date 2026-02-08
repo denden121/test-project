@@ -1,18 +1,33 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
 
 class WishlistCreate(BaseModel):
-    title: str = Field(description="Название повода", examples=["День рождения", "Новый год"])
+    title: str = Field(description="Название списка", examples=["День рождения Маши"])
+    occasion: str | None = Field(None, description="Повод", examples=["День рождения", "Новый год"])
+    event_date: date | None = Field(None, description="Дата события")
 
-    model_config = {"json_schema_extra": {"examples": [{"title": "День рождения"}]}}
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{"title": "День рождения Маши", "occasion": "День рождения", "event_date": "2025-03-15"}]
+        }
+    }
+
+
+class WishlistUpdate(BaseModel):
+    """Частичное обновление списка — все поля опциональны."""
+    title: str | None = None
+    occasion: str | None = None
+    event_date: date | None = None
 
 
 class WishlistResponse(BaseModel):
     id: int
     title: str
+    occasion: str | None = None
+    event_date: date | None = None
     slug: str
     created_at: datetime
 
@@ -72,6 +87,8 @@ class WishlistPublicResponse(BaseModel):
     """Публичный вид списка — по slug, без creator_secret."""
     id: int
     title: str
+    occasion: str | None = None
+    event_date: date | None = None
     slug: str
     items: list[WishlistItemResponse]
 

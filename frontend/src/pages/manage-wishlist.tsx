@@ -22,8 +22,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/contexts/i18n-context'
-import { API_URL, type WishlistManageDetailResponse, type WishlistItemResponse } from '@/lib/api'
-import { removeStoredWishlist } from '@/lib/wishlist-storage'
+import { API_URL, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
+import { removeStoredWishlist, updateStoredWishlistTitle } from '@/lib/wishlist-storage'
 
 function toNum(v: number | string | null | undefined): number {
   if (v == null) return 0
@@ -35,6 +35,12 @@ type ItemFormValues = {
   link: string
   price: string
   image_url: string
+}
+
+type ListFormValues = {
+  title: string
+  occasion: string
+  event_date: string
 }
 
 export function ManageWishlist() {
@@ -52,6 +58,10 @@ export function ManageWishlist() {
     defaultValues: { title: '', link: '', price: '', image_url: '' },
   })
 
+  const listForm = useForm<ListFormValues>({
+    defaultValues: { title: '', occasion: '', event_date: '' },
+  })
+
   useEffect(() => {
     if (!creatorSecret) return
     axios
@@ -60,6 +70,35 @@ export function ManageWishlist() {
       .catch((e) => setError(e.response?.data?.detail ?? e.message))
       .finally(() => setLoading(false))
   }, [creatorSecret])
+
+  useEffect(() => {
+    if (wishlist) {
+      listForm.reset({
+        title: wishlist.title,
+        occasion: wishlist.occasion ?? '',
+        event_date: wishlist.event_date ?? '',
+      })
+    }
+  }, [wishlist])
+
+  const onSaveList = async (data: ListFormValues) => {
+    if (!creatorSecret) return
+    setError(null)
+    try {
+      const { data: updated } = await axios.patch<WishlistManageResponse>(
+        `${API_URL}/wishlists/m/${creatorSecret}`,
+        {
+          title: data.title,
+          occasion: data.occasion || null,
+          event_date: data.event_date || null,
+        }
+      )
+      setWishlist((w) => (w ? { ...w, ...updated } : null))
+      updateStoredWishlistTitle(creatorSecret, data.title)
+    } catch (e: unknown) {
+      setError(axios.isAxiosError(e) ? String(e.response?.data?.detail ?? e.message) : t('common.error'))
+    }
+  }
 
   const shareUrl = creatorSecret
     ? `${window.location.origin}/wishlists/s/${wishlist?.slug ?? ''}`
@@ -159,6 +198,44 @@ export function ManageWishlist() {
           <Link to="/">{t('common.back')}</Link>
         </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('wishlist.editList')}</CardTitle>
+          <CardDescription>{t('wishlist.listTitle')}</CardDescription>
+        </CardHeader>
+        <form onSubmit={listForm.handleSubmit(onSaveList)}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="list-title">{t('wishlist.listTitle')}</Label>
+              <Input
+                id="list-title"
+                {...listForm.register('title', { required: true })}
+                placeholder={t('wishlist.listTitlePlaceholder')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="list-occasion">{t('wishlist.occasion')}</Label>
+              <Input
+                id="list-occasion"
+                {...listForm.register('occasion')}
+                placeholder={t('wishlist.occasionPlaceholder')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="list-event_date">{t('wishlist.eventDate')}</Label>
+              <Input
+                id="list-event_date"
+                type="date"
+                {...listForm.register('event_date')}
+              />
+            </div>
+            <Button type="submit" disabled={listForm.formState.isSubmitting}>
+              {t('common.save')}
+            </Button>
+          </CardContent>
+        </form>
+      </Card>
 
       <Card>
         <CardHeader>

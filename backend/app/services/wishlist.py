@@ -47,6 +47,8 @@ async def get_wishlist_public_dict(slug: str, db: AsyncSession) -> dict | None:
     resp = WishlistPublicResponse(
         id=wishlist.id,
         title=wishlist.title,
+        occasion=wishlist.occasion,
+        event_date=wishlist.event_date,
         slug=wishlist.slug,
         items=[item_to_response(i) for i in wishlist.items],
     )

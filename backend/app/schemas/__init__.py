@@ -24,6 +24,7 @@ from app.schemas.wishlist import (
     WishlistManageResponse,
     WishlistPublicResponse,
     WishlistResponse,
+    WishlistUpdate,
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "WishlistManageResponse",
     "WishlistPublicResponse",
     "WishlistResponse",
+    "WishlistUpdate",
 ]

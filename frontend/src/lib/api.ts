@@ -34,6 +34,8 @@ export type ContributionResponse = {
 export type WishlistManageResponse = {
   id: number
   title: string
+  occasion: string | null
+  event_date: string | null
   slug: string
   creator_secret: string
   created_at: string
@@ -46,6 +48,8 @@ export type WishlistManageDetailResponse = WishlistManageResponse & {
 export type WishlistPublicResponse = {
   id: number
   title: string
+  occasion: string | null
+  event_date: string | null
   slug: string
   items: WishlistItemResponse[]
 }

@@ -142,10 +142,16 @@ export function PublicWishlist() {
     ? `${window.location.origin}/reservations/${reservedResult.reserver_secret}`
     : ''
 
+  const occasionOrDate = [wishlist.occasion, wishlist.event_date]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{wishlist.title}</h1>
-      <p className="text-muted-foreground">{t('wishlist.publicTitle')}</p>
+      <p className="text-muted-foreground">
+        {occasionOrDate || t('wishlist.publicTitle')}
+      </p>
 
       {reservedResult && (
         <Card className="border-primary/50 bg-primary/5">
