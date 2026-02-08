@@ -1,0 +1,11 @@
+{
+  "name": "test-project",
+  "private": true,
+  "description": "Root for scripts (Sonar, etc.)",
+  "scripts": {
+    "sonar": "node scripts/sonar.js"
+  },
+  "devDependencies": {
+    "sonarqube-scanner": "^3.3.0"
+  }
+}

@@ -1,5 +1,8 @@
+import os
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
+
+_DEFAULT_SECRET = "change-me-in-production-use-env-SECRET_KEY"
 
 
 class Settings(BaseSettings):
@@ -8,7 +11,7 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL",
     )
     secret_key: str = Field(
-        default="change-me-in-production-use-env-SECRET_KEY",
+        default=_DEFAULT_SECRET,
         validation_alias="SECRET_KEY",
     )
     algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
@@ -24,6 +27,13 @@ class Settings(BaseSettings):
     def async_driver(cls, v: str) -> str:
         if v and v.startswith("postgresql://") and "asyncpg" not in v:
             return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("secret_key")
+    @classmethod
+    def secret_not_default_in_production(cls, v: str) -> str:
+        if os.environ.get("ENV") == "production" and v == _DEFAULT_SECRET:
+            raise ValueError("Set SECRET_KEY in production")
         return v
 
 

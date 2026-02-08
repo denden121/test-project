@@ -32,7 +32,7 @@ class ConnectionManager:
         for ws in connections:
             try:
                 await ws.send_text(msg)
-            except Exception:
+            except (OSError, ConnectionError, RuntimeError):
                 disconnected.append(ws)
         if disconnected:
             async with self._lock:

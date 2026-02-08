@@ -70,6 +70,17 @@ npm run e2e
 
 Анализ кода в [SonarCloud](https://sonarcloud.io): проект `denden121_test-project`, организация `denden121`. Конфиг — `sonar-project.properties`, workflow — `.github/workflows/sonarcloud.yml`. В настройках репозитория GitHub добавьте секрет **SONAR_TOKEN** (токен из SonarCloud: Account → Security → Generate Tokens).
 
+**Локальный запуск анализа:**
+
+```bash
+# из корня репозитория
+npm install
+export SONAR_TOKEN=ваш_токен_из_sonarcloud
+npm run sonar
+```
+
+Результаты загрузятся в SonarCloud; замечания можно смотреть в веб-интерфейсе.
+
 ### 3. Frontend
 
 ```bash

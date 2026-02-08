@@ -33,7 +33,7 @@ OPENAPI_TAGS = [
 async def lifespan(app: FastAPI):
     try:
         await init_db()
-    except Exception as e:
+    except Exception as e:  # init_db can raise DB/network errors
         logger.warning("Database init skipped (unavailable): %s", e)
     yield
     # cleanup if needed

@@ -67,8 +67,8 @@ export function PublicWishlist() {
       try {
         const data = JSON.parse(e.data) as WishlistPublicResponse
         setWishlist(data)
-      } catch {
-        /* ignore */
+      } catch (_err) {
+        // ignore invalid WS message payload
       }
     },
     shouldReconnect: () => true,
