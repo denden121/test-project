@@ -19,6 +19,9 @@ class Settings(BaseSettings):
         default=60 * 24 * 7,
         validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
+    # Google OAuth (optional; if set, "Login with Google" is enabled)
+    google_client_id: str | None = Field(default=None, validation_alias="GOOGLE_CLIENT_ID")
+    google_client_secret: str | None = Field(default=None, validation_alias="GOOGLE_CLIENT_SECRET")
 
     model_config = {"env_file": ".env"}
 

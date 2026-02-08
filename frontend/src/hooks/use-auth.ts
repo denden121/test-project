@@ -1,5 +1,9 @@
 import { useCallback } from 'react'
-import { useLoginMutation, useRegisterMutation } from '@/store/api/authApi'
+import {
+  useLoginMutation,
+  useRegisterMutation,
+  useLoginWithGoogleMutation,
+} from '@/store/api/authApi'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { setCredentials, logout as logoutAction } from '@/store/slices/authSlice'
 import type { User } from '@/store/slices/authSlice'
@@ -9,6 +13,7 @@ export function useAuth() {
   const { token, user, _hydrated } = useAppSelector((s) => s.auth)
   const [loginMutation] = useLoginMutation()
   const [registerMutation] = useRegisterMutation()
+  const [loginWithGoogleMutation] = useLoginWithGoogleMutation()
 
   const loading = !_hydrated
 
@@ -28,6 +33,14 @@ export function useAuth() {
     [registerMutation, dispatch]
   )
 
+  const loginWithGoogle = useCallback(
+    async (code: string, redirectUri: string) => {
+      const result = await loginWithGoogleMutation({ code, redirect_uri: redirectUri }).unwrap()
+      dispatch(setCredentials({ token: result.access_token, user: result.user }))
+    },
+    [loginWithGoogleMutation, dispatch]
+  )
+
   const logout = useCallback(() => {
     dispatch(logoutAction())
   }, [dispatch])
@@ -38,6 +51,7 @@ export function useAuth() {
     loading,
     login,
     register,
+    loginWithGoogle,
     logout,
   }
 }

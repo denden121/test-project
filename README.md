@@ -120,6 +120,18 @@ npm run dev
 
 Тестовая ручка: `GET /api/test` — возвращает `{ "message": "Test OK", "timestamp": "...", "source": "backend" }`. Фронт дергает её при загрузке и по кнопке «Обновить».
 
+#### Вход через Google (OAuth)
+
+1. В [Google Cloud Console](https://console.cloud.google.com/) создайте OAuth 2.0 Client ID (тип «Веб-приложение»).
+2. **Обязательно** добавьте **Authorized redirect URI**:  
+   `https://ВАШ-ДОМЕН-ФРОНТА/auth/callback`  
+   (например `https://test-project-eta-lac.vercel.app/auth/callback`). Без этого шага Google вернёт ошибку при входе.
+3. В **Authorized JavaScript origins** укажите origin фронта (у вас уже есть `https://test-project-eta-lac.vercel.app`).
+4. Backend: в переменных окружения задайте `GOOGLE_CLIENT_ID` и `GOOGLE_CLIENT_SECRET`.
+5. Frontend (Vercel): в переменных окружения задайте `VITE_GOOGLE_CLIENT_ID` (только Client ID). После изменения переменных сделайте redeploy.
+6. Если БД уже была создана до добавления Google OAuth, выполните один раз:  
+   `ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL;`
+
 ### Бэкенд на Render
 
 - **New** → **Web Service**, подключите репозиторий.

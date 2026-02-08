@@ -39,6 +39,12 @@ class Token(BaseModel):
     user: UserResponse
 
 
+class GoogleTokenRequest(BaseModel):
+    """Тело запроса для входа через Google (обмен code на JWT)."""
+    code: str = Field(description="Authorization code из redirect от Google")
+    redirect_uri: str = Field(description="Тот же redirect_uri, что использовался при переходе в Google")
+
+
 # --- Wishlist ---
 class WishlistCreate(BaseModel):
     title: str = Field(description="Название повода", examples=["День рождения", "Новый год"])

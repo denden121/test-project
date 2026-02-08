@@ -2,6 +2,7 @@ import { Navigate, Route, BrowserRouter, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
 import { Landing } from '@/pages/landing'
 import { LoginPage } from '@/pages/login-page'
+import { AuthCallbackPage } from '@/pages/auth-callback-page'
 import { Dashboard } from '@/pages/dashboard'
 import { CreateWishlist } from '@/pages/create-wishlist'
 import { ManageWishlist } from '@/pages/manage-wishlist'
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<HomeOrDashboard />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="auth/callback" element={<AuthCallbackPage />} />
           <Route
             path="wishlists/new"
             element={
