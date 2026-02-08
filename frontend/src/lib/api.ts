@@ -1,7 +1,7 @@
 const raw = import.meta.env.VITE_API_URL ?? ''
 export const API_URL =
   raw.startsWith('http')
-    ? raw.replace(/\/?$/, '').replace(/\/api\/?$/, '') + '/api'
+    ? `${raw.replace(/\/?$/, '').replace(/\/api\/?$/, '')}/api`
     : raw || '/api'
 
 export type WishlistItemResponse = {

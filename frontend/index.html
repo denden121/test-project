@@ -6,7 +6,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Test Project</title>
     <script>
-      (function () {
+      (() => {
         var t = localStorage.getItem('theme');
         var dark = t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.add(dark ? 'dark' : 'light');
