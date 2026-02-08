@@ -31,11 +31,11 @@ async def test_login(client: AsyncClient):
     """Логин возвращает токен."""
     await client.post(
         "/api/auth/register",
-        json={"email": "login@example.com", "password": "mypass"},
+        json={"email": "login@example.com", "password": "mypass12"},
     )
     r = await client.post(
         "/api/auth/login",
-        json={"email": "login@example.com", "password": "mypass"},
+        json={"email": "login@example.com", "password": "mypass12"},
     )
     assert r.status_code == 200
     assert "access_token" in r.json()
@@ -46,7 +46,7 @@ async def test_login_wrong_password(client: AsyncClient):
     """Логин с неверным паролем — 401."""
     await client.post(
         "/api/auth/register",
-        json={"email": "login2@example.com", "password": "correct"},
+        json={"email": "login2@example.com", "password": "correct1"},
     )
     r = await client.post(
         "/api/auth/login",
@@ -60,7 +60,7 @@ async def test_me_authenticated(client: AsyncClient):
     """GET /me с токеном возвращает пользователя."""
     reg_r = await client.post(
         "/api/auth/register",
-        json={"email": "me@example.com", "password": "secret"},
+        json={"email": "me@example.com", "password": "secret12"},
     )
     token = reg_r.json()["access_token"]
 
