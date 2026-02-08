@@ -97,11 +97,12 @@ npm run dev
 
 1. Импортируйте репозиторий в [Vercel](https://vercel.com).
 2. **Root Directory**: оставьте корень репозитория (используется `vercel.json`).
-3. Переменные окружения (если бэк развёрнут отдельно):
-   - `VITE_API_URL` = `https://your-api.railway.app` (или ваш URL API).
+3. **Чтобы запросы шли на ваш хост** (например `https://ваш-проект.vercel.app/api/...`), а не на длинный URL бэкенда:
+   - В настройках проекта на Vercel добавьте переменную окружения **`BACKEND_URL`** = URL вашего бэкенда (например `https://test-project-production-34b3.up.railway.app`, без слэша в конце). Её читает **Serverless Function** `api/[[...path]].js` при каждом запросе и проксирует `/api/*` на бэкенд ([best practice](https://vercel.com/guides/vercel-reverse-proxy-rewrites-external)).
+   - **Не задавайте** переменную `VITE_API_URL` на Vercel (или задайте `VITE_API_URL=/api`). Тогда фронт будет слать запросы на тот же хост (`/api/...`), а функция будет проксировать их на бэкенд.
 4. Deploy.
 
-В `vercel.json` уже заданы `buildCommand`, `outputDirectory` и `installCommand` для папки `frontend`.
+В `vercel.json` заданы `buildCommand`, `outputDirectory`, `installCommand` и rewrite для SPA. Прокси API реализован в `api/[[...path]].js` и использует только переменную `BACKEND_URL`.
 
 ### Бэкенд: как развернуть (Railway)
 
@@ -115,7 +116,7 @@ npm run dev
    - `DATABASE_URL` — connection string PostgreSQL (см. ниже).
 5. База на Railway: в том же проекте **New** → **Database** → **PostgreSQL**. Railway создаст БД и добавит `DATABASE_URL` в переменные. Для SQLAlchemy async строка должна быть вида `postgresql+asyncpg://...` — если скопировали `postgresql://...`, замените в начале на `postgresql+asyncpg://`.
 6. **Deploy**. После деплоя возьмите **Public URL** (например `https://test-project-production-xxx.up.railway.app`).
-7. В настройках фронта на Vercel добавьте переменную **VITE_API_URL** = этот URL (без слэша в конце) и пересоберите фронт.
+7. В настройках фронта на Vercel добавьте переменную **`BACKEND_URL`** = этот URL бэкенда (без слэша в конце). Переменную **VITE_API_URL** задавать не нужно — фронт использует относительный путь `/api`, запросы проксируются на бэкенд через Serverless Function.
 
 Тестовая ручка: `GET /api/test` — возвращает `{ "message": "Test OK", "timestamp": "...", "source": "backend" }`. Фронт дергает её при загрузке и по кнопке «Обновить».
 
