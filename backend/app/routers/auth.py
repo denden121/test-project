@@ -124,9 +124,15 @@ async def login_google(
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         if token_res.status_code != 200:
+            err_body = token_res.text
+            try:
+                err_json = token_res.json()
+                msg = err_json.get("error_description") or err_json.get("error") or err_body
+            except Exception:
+                msg = err_body or "Invalid or expired Google authorization code"
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired Google authorization code",
+                detail=msg,
             )
         token_json = token_res.json()
         access_token_google = token_json.get("access_token")
