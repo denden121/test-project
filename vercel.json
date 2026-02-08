@@ -4,9 +4,7 @@
   "installCommand": "cd frontend && npm install",
   "framework": null,
   "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/:path*", "destination": "/api/proxy" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

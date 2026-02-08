@@ -98,11 +98,11 @@ npm run dev
 1. Импортируйте репозиторий в [Vercel](https://vercel.com).
 2. **Root Directory**: оставьте корень репозитория (используется `vercel.json`).
 3. **Чтобы запросы шли на ваш хост** (например `https://ваш-проект.vercel.app/api/...`), а не на длинный URL бэкенда:
-   - В настройках проекта на Vercel добавьте переменную окружения **`BACKEND_URL`** = URL вашего бэкенда (например `https://test-project-production-34b3.up.railway.app`, без слэша в конце). Её читает **Serverless Function** `api/[[...path]].js` при каждом запросе и проксирует `/api/*` на бэкенд ([best practice](https://vercel.com/guides/vercel-reverse-proxy-rewrites-external)).
+   - В настройках проекта на Vercel добавьте переменную окружения **`BACKEND_URL`** = URL вашего бэкенда (например `https://test-project-production-34b3.up.railway.app`, без слэша в конце). Её читает **Serverless Function** `api/proxy.js` при каждом запросе и проксирует `/api/*` на бэкенд ([best practice](https://vercel.com/guides/vercel-reverse-proxy-rewrites-external)).
    - **Не задавайте** переменную `VITE_API_URL` на Vercel (или задайте `VITE_API_URL=/api`). Тогда фронт будет слать запросы на тот же хост (`/api/...`), а функция будет проксировать их на бэкенд.
 4. Deploy.
 
-В `vercel.json` заданы `buildCommand`, `outputDirectory`, `installCommand` и rewrite для SPA. Прокси API реализован в `api/[[...path]].js` и использует только переменную `BACKEND_URL`.
+В `vercel.json` заданы `buildCommand`, `outputDirectory`, `installCommand` и rewrite для SPA. Прокси API реализован в `api/proxy.js` и использует только переменную `BACKEND_URL`.
 
 ### Бэкенд: как развернуть (Railway)
 
