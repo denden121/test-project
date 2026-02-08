@@ -44,9 +44,14 @@ export function RegisterForm() {
       await registerUser(data.email, data.password)
       navigate('/', { replace: true })
     } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'data' in err && (err as { data?: { detail?: string } }).data?.detail
-          ? String((err as { data: { detail: string } }).data.detail)
+      const detail =
+        err && typeof err === 'object' && 'data' in err
+          ? (err as { data?: { detail?: string | Array<{ msg?: string }> } }).data?.detail
+          : undefined
+      const msg = Array.isArray(detail)
+        ? detail[0]?.msg ?? t('auth.error')
+        : typeof detail === 'string'
+          ? detail
           : err instanceof Error
             ? err.message
             : t('auth.error')
@@ -99,8 +104,13 @@ export function RegisterForm() {
               {...register('password', {
                 required: true,
                 minLength: {
-                  value: 6,
+                  value: 8,
                   message: t('auth.passwordTooShort'),
+                },
+                validate: (value) => {
+                  if (!/[a-zA-Z]/.test(value)) return t('auth.passwordNeedsLetter')
+                  if (!/\d/.test(value)) return t('auth.passwordNeedsDigit')
+                  return true
                 },
               })}
             />
@@ -122,7 +132,7 @@ export function RegisterForm() {
               {...register('passwordConfirm', {
                 required: true,
                 minLength: {
-                  value: 6,
+                  value: 8,
                   message: t('auth.passwordTooShort'),
                 },
                 validate: (value) =>

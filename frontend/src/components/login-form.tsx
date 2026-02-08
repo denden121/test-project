@@ -40,9 +40,14 @@ export function LoginForm() {
       await login(data.email, data.password)
       navigate('/', { replace: true })
     } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'data' in err && (err as { data?: { detail?: string } }).data?.detail
-          ? String((err as { data: { detail: string } }).data.detail)
+      const detail =
+        err && typeof err === 'object' && 'data' in err
+          ? (err as { data?: { detail?: string | Array<{ msg?: string }> } }).data?.detail
+          : undefined
+      const msg = Array.isArray(detail)
+        ? detail[0]?.msg ?? t('auth.error')
+        : typeof detail === 'string'
+          ? detail
           : err instanceof Error
             ? err.message
             : t('auth.error')

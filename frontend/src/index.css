@@ -38,6 +38,7 @@
  */
 @layer utilities {
   .bg-background { background-color: var(--color-background); }
+  .bg-background\/95 { background-color: color-mix(in oklch, var(--color-background) 95%, transparent); }
   .bg-card { background-color: var(--color-card); }
   .bg-muted { background-color: var(--color-muted); }
   .bg-primary { background-color: var(--color-primary); }
