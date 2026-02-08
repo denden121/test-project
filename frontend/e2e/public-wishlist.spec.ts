@@ -30,7 +30,7 @@ test.describe('Public wishlist & reservation', () => {
     await page.getByPlaceholder(/Маша|Mary/).fill('Маша')
     await page.getByRole('button', { name: 'Зарезервировать' }).click()
 
-    await expect(page.getByText(/зарезервирован|reserved/i)).toBeVisible()
+    await expect(page.getByText(/зарезервирован|reserved/i).first()).toBeVisible()
     await expect(page.getByRole('link', { name: 'Моя резервация' })).toBeVisible()
   })
 

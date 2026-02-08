@@ -65,7 +65,7 @@ export function RegisterForm() {
         <CardTitle>{t('auth.registerTitle')}</CardTitle>
         <CardDescription>{t('auth.registerDescription')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)} autoComplete="on">
+      <form onSubmit={handleSubmit(onSubmit)} autoComplete="on" noValidate>
         <CardContent className="space-y-4">
           {apiError && (
             <p className="text-sm text-destructive">{apiError}</p>

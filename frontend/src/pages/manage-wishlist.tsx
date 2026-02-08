@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useForm, type UseFormRegister, type UseFormHandleSubmit } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -11,6 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/contexts/i18n-context'
@@ -36,7 +44,8 @@ export function ManageWishlist() {
   const [wishlist, setWishlist] = useState<WishlistManageDetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<WishlistItemResponse | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ItemFormValues>({
@@ -63,45 +72,55 @@ export function ManageWishlist() {
     setTimeout(() => setLinkCopied(false), 2000)
   }
 
-  const onAddItem = async (data: ItemFormValues) => {
-    if (!creatorSecret) return
-    setError(null)
-    try {
-      const { data: item } = await axios.post<WishlistItemResponse>(
-        `${API_URL}/wishlists/m/${creatorSecret}/items`,
-        {
-          title: data.title,
-          link: data.link || null,
-          price: data.price ? Number(data.price) : null,
-          image_url: data.image_url || null,
-        }
-      )
-      setWishlist((w) =>
-        w ? { ...w, items: [...w.items, item] } : null
-      )
-      reset()
-    } catch (e: unknown) {
-      setError(axios.isAxiosError(e) ? String(e.response?.data?.detail ?? e.message) : t('common.error'))
-    }
+  const openModalForCreate = () => {
+    setEditingItem(null)
+    reset({ title: '', link: '', price: '', image_url: '' })
+    setModalOpen(true)
   }
 
-  const onUpdateItem = async (itemId: number, data: ItemFormValues) => {
+  const openModalForEdit = (item: WishlistItemResponse) => {
+    setEditingItem(item)
+    setValue('title', item.title)
+    setValue('link', item.link ?? '')
+    setValue('price', item.price != null ? String(item.price) : '')
+    setValue('image_url', item.image_url ?? '')
+    setModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setEditingItem(null)
+    reset({ title: '', link: '', price: '', image_url: '' })
+  }
+
+  const onSaveItem = async (data: ItemFormValues) => {
     if (!creatorSecret) return
     setError(null)
+    const payload = {
+      title: data.title,
+      link: data.link || null,
+      price: data.price ? Number(data.price) : null,
+      image_url: data.image_url || null,
+    }
     try {
-      const { data: updated } = await axios.patch<WishlistItemResponse>(
-        `${API_URL}/wishlists/m/${creatorSecret}/items/${itemId}`,
-        {
-          title: data.title,
-          link: data.link || null,
-          price: data.price ? Number(data.price) : null,
-          image_url: data.image_url || null,
-        }
-      )
-      setWishlist((w) =>
-        w ? { ...w, items: w.items.map((i) => (i.id === itemId ? updated : i)) } : null
-      )
-      setEditingId(null)
+      if (editingItem) {
+        const { data: updated } = await axios.patch<WishlistItemResponse>(
+          `${API_URL}/wishlists/m/${creatorSecret}/items/${editingItem.id}`,
+          payload
+        )
+        setWishlist((w) =>
+          w ? { ...w, items: w.items.map((i) => (i.id === editingItem.id ? updated : i)) } : null
+        )
+      } else {
+        const { data: item } = await axios.post<WishlistItemResponse>(
+          `${API_URL}/wishlists/m/${creatorSecret}/items`,
+          payload
+        )
+        setWishlist((w) =>
+          w ? { ...w, items: [...w.items, item] } : null
+        )
+      }
+      closeModal()
     } catch (e: unknown) {
       setError(axios.isAxiosError(e) ? String(e.response?.data?.detail ?? e.message) : t('common.error'))
     }
@@ -154,71 +173,87 @@ export function ManageWishlist() {
         </CardContent>
       </Card>
 
-      {editingId === null && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('wishlist.addItem')}</CardTitle>
-          </CardHeader>
-          <form onSubmit={handleSubmit(onAddItem)}>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label>{t('wishlist.itemTitle')}</Label>
-              <Input {...register('title', { required: true })} placeholder={t('wishlist.itemTitle')} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('wishlist.itemLink')}</Label>
-              <Input {...register('link')} type="url" placeholder="https://..." />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('wishlist.itemPrice')}</Label>
-              <Input {...register('price')} type="number" step="0.01" placeholder="0" />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label>{t('wishlist.itemImage')}</Label>
-              <Input {...register('image_url')} type="url" placeholder="https://..." />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" disabled={isSubmitting}>{t('wishlist.addItem')}</Button>
-          </CardFooter>
-        </form>
-      </Card>
-      )}
-
-      <div className="space-y-2">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{t('wishlist.manage')}</h2>
-        <ul className="space-y-2">
-          {wishlist.items.map((item) => (
-            <li key={item.id}>
-              {editingId === item.id ? (
-                <ItemEditForm
-                  register={register}
-                  onSave={(data) => onUpdateItem(item.id, data)}
-                  onCancel={() => setEditingId(null)}
-                  handleSubmit={handleSubmit}
-                  t={t}
-                />
-              ) : (
-                <ItemRow
-                  item={item}
-                  onEdit={() => {
-                    setEditingId(item.id)
-                    setValue('title', item.title)
-                    setValue('link', item.link ?? '')
-                    setValue('price', item.price != null ? String(item.price) : '')
-                    setValue('image_url', item.image_url ?? '')
-                  }}
-                  onDelete={() => onDeleteItem(item.id)}
-                  t={t}
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-        {wishlist.items.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t('wishlist.noLists')}</p>
-        )}
+        <Button onClick={openModalForCreate}>{t('wishlist.addItem')}</Button>
       </div>
+
+      <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? t('wishlist.editItemTitle') : t('wishlist.addItem')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('wishlist.itemTitle')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSaveItem)}>
+            <div className="grid gap-4 py-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="modal-title">{t('wishlist.itemTitle')}</Label>
+                <Input
+                  id="modal-title"
+                  {...register('title', { required: true })}
+                  placeholder={t('wishlist.itemTitle')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="modal-link">{t('wishlist.itemLink')}</Label>
+                <Input
+                  id="modal-link"
+                  {...register('link')}
+                  type="url"
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="modal-price">{t('wishlist.itemPrice')}</Label>
+                <Input
+                  id="modal-price"
+                  {...register('price')}
+                  type="number"
+                  step="0.01"
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="modal-image">{t('wishlist.itemImage')}</Label>
+                <Input
+                  id="modal-image"
+                  {...register('image_url')}
+                  type="url"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeModal}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {editingItem ? t('common.save') : t('wishlist.addItem')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ul className="space-y-2">
+        {wishlist.items.map((item) => (
+          <li key={item.id}>
+            <ItemRow
+              item={item}
+              onEdit={() => openModalForEdit(item)}
+              onDelete={() => onDeleteItem(item.id)}
+              t={t}
+            />
+          </li>
+        ))}
+      </ul>
+      {wishlist.items.length === 0 && (
+        <p className="text-sm text-muted-foreground">{t('wishlist.noLists')}</p>
+      )}
 
       <Card className="border-destructive/50">
         <CardHeader>
@@ -301,51 +336,6 @@ function ItemRow({
           </Button>
         </div>
       </CardContent>
-    </Card>
-  )
-}
-
-function ItemEditForm({
-  register,
-  onSave,
-  onCancel,
-  handleSubmit,
-  t,
-}: {
-  register: UseFormRegister<ItemFormValues>
-  onSave: (data: ItemFormValues) => void
-  onCancel: () => void
-  handleSubmit: UseFormHandleSubmit<ItemFormValues>
-  t: (k: string) => string
-}) {
-  return (
-    <Card>
-      <form onSubmit={handleSubmit(onSave)}>
-        <CardContent className="grid gap-2 py-4 sm:grid-cols-2">
-          <div className="space-y-1 sm:col-span-2">
-            <Label>{t('wishlist.itemTitle')}</Label>
-            <Input {...register('title', { required: true })} />
-          </div>
-          <div className="space-y-1">
-            <Label>{t('wishlist.itemLink')}</Label>
-            <Input {...register('link')} type="url" />
-          </div>
-          <div className="space-y-1">
-            <Label>{t('wishlist.itemPrice')}</Label>
-            <Input {...register('price')} type="number" step="0.01" />
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <Label>{t('wishlist.itemImage')}</Label>
-            <Input {...register('image_url')} type="url" />
-          </div>
-        </CardContent>
-        <CardFooter className="gap-2">
-          <Button type="submit">{t('common.save')}</Button>
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t('common.cancel')}
-          </Button>
-        </CardFooter>
-      </form>
     </Card>
   )
 }

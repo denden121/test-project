@@ -15,15 +15,15 @@ test.describe('Wishlist', () => {
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Мои списки' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
 
-    await page.getByRole('link', { name: 'Создать список' }).click()
+    await page.getByRole('link', { name: 'Создать список' }).first().click()
     await expect(page).toHaveURL(/\/wishlists\/new/)
     await page.getByLabel('Название списка').fill('День рождения')
     await page.getByRole('button', { name: 'Создать' }).click()
 
     await expect(page).toHaveURL(/\/wishlists\/manage\//)
-    await expect(page.getByText(/\/wishlists\/s\//)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Ссылка для друзей|Share link/i })).toBeVisible()
   })
 
   test('T2.1.2 Создание без названия — валидация', async ({ page, request }) => {

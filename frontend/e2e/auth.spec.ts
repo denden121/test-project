@@ -11,9 +11,7 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
     await expect(page).toHaveURL(/\/$/)
-    await expect(
-      page.getByRole('heading', { name: 'Мои списки' }).or(page.getByRole('link', { name: 'Создать список' }))
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
   })
 
   test('T1.1.3 Регистрация с невалидным email', async ({ page }) => {
@@ -43,7 +41,7 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: 'Войти' }).click()
 
     await expect(page).toHaveURL(/\/$/)
-    await expect(page.getByRole('heading', { name: 'Мои списки' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
   })
 
   test('T1.2.2 Неверный пароль', async ({ page, request }) => {
@@ -74,10 +72,10 @@ test.describe('Auth', () => {
       localStorage.setItem('auth_token', t)
     }, token)
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Мои списки' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
 
     await page.getByRole('button', { name: 'Выйти' }).click()
     await expect(page).toHaveURL(/\/$/)
-    await expect(page.getByRole('link', { name: 'Войти' }).or(page.getByRole('button', { name: 'Войти' }))).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Войти' }).first()).toBeVisible()
   })
 })

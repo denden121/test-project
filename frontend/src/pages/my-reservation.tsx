@@ -45,6 +45,7 @@ export function MyReservation() {
           <CardTitle>{t('wishlist.myReservation')}</CardTitle>
           <CardDescription>
             {t('wishlist.reservedItem')}: {reservation.item_title ?? '—'}
+            {reservation.reserver_name && ` (${reservation.reserver_name})`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
