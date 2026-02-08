@@ -1,6 +1,7 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -130,10 +131,20 @@ async def login_google(
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user:
-        user = User(email=email, hashed_password=None)
-        db.add(user)
-        await db.flush()
-        await db.refresh(user)
+        try:
+            user = User(email=email, hashed_password=None)
+            db.add(user)
+            await db.flush()
+            await db.refresh(user)
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=(
+                    "Database: users.hashed_password must allow NULL for Google sign-in. "
+                    "Run: ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL;"
+                ),
+            )
     access_token = create_access_token(user.id)
     return Token(
         access_token=access_token,
