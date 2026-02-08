@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
@@ -33,3 +34,12 @@ async def get_db():
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Widen price/amount columns for existing DBs (Numeric(10,2) -> Numeric(18,2))
+        for stmt in (
+            "ALTER TABLE wishlist_items ALTER COLUMN price TYPE NUMERIC(18, 2)",
+            "ALTER TABLE contributions ALTER COLUMN amount TYPE NUMERIC(18, 2)",
+        ):
+            try:
+                await conn.execute(text(stmt))
+            except Exception:
+                pass  # column may already be widened or table missing

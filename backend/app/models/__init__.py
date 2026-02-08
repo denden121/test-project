@@ -52,7 +52,7 @@ class WishlistItem(Base):
     wishlist_id: Mapped[int] = mapped_column(ForeignKey("wishlists.id", ondelete="CASCADE"))
     title: Mapped[str] = mapped_column(String(255))  # Название товара
     link: Mapped[str | None] = mapped_column(String(2048), nullable=True)  # Ссылка на товар
-    price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    price: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)  # Картинка
     sort_order: Mapped[int] = mapped_column(default=0)  # Порядок отображения
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -84,7 +84,7 @@ class Contribution(Base):
     )
     contributor_name: Mapped[str] = mapped_column(String(255))
     contributor_secret: Mapped[str] = mapped_column(String(64), default=generate_slug, index=True)
-    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     contributed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     item: Mapped["WishlistItem"] = relationship("WishlistItem", back_populates="contributions")
