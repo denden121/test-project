@@ -3,10 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.database import get_db
+from app.db.session import get_db
 from app.models import Reservation, WishlistItem
-from app.routers.wishlists import broadcast_wishlist_update
 from app.schemas import ReservationResponse
+from app.services.wishlist import broadcast_wishlist_update
 
 router = APIRouter()
 

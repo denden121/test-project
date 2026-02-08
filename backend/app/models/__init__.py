@@ -2,10 +2,15 @@ import secrets
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.db.base import Base
+
+
+def generate_slug() -> str:
+    """Generate a unique URL-safe slug for sharing."""
+    return secrets.token_urlsafe(12)
 
 
 class User(Base):
@@ -16,11 +21,6 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)  # None для OAuth-пользователей
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
-def generate_slug() -> str:
-    """Generate a unique URL-safe slug for sharing."""
-    return secrets.token_urlsafe(12)
 
 
 class Wishlist(Base):

@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import init_db
-from app.routers import auth, contributions, health, items, reservations, wishlists
+from app.api.v1 import auth, contributions, health, items, reservations, wishlists
+from app.db.session import init_db
 
 logger = logging.getLogger(__name__)
 

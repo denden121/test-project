@@ -10,7 +10,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from app.database import engine, init_db
+from app.db.session import engine, init_db
 from app.main import app
 
 

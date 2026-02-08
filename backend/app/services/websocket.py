@@ -40,4 +40,4 @@ class ConnectionManager:
                     self._connections[slug].discard(ws)
 
 
-manager = ConnectionManager()
+ws_manager = ConnectionManager()

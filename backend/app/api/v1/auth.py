@@ -1,50 +1,20 @@
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
-from app.database import get_db
-from app.models import User
-from app.schemas import GoogleTokenRequest, Token, UserCreate, UserResponse
-from app.security import (
+from app.api.deps import get_current_user
+from app.core.config import settings
+from app.core.security import (
     create_access_token,
-    decode_access_token,
     get_password_hash,
     verify_password,
 )
+from app.db.session import get_db
+from app.models import User
+from app.schemas import GoogleTokenRequest, Token, UserCreate, UserResponse
 
 router = APIRouter()
-security = HTTPBearer(auto_error=False)
-
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    if not credentials or credentials.credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    user_id = decode_access_token(credentials.credentials)
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
 
 
 @router.post("/register", response_model=Token)
