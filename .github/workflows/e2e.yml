@@ -38,6 +38,12 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: frontend
 
+      - name: Build frontend (for preview in CI)
+        run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API_URL: http://127.0.0.1:8000
+
       - name: Start backend and run E2E
         run: |
           cd backend

@@ -15,10 +15,17 @@ export default defineConfig({
     locale: 'ru',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'npm run dev',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: process.env.CI
+    ? {
+        command: 'npm run preview -- --port 3000 --host 127.0.0.1',
+        url: baseURL,
+        reuseExistingServer: false,
+        timeout: 60_000,
+      }
+    : {
+        command: 'npm run dev',
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 })
