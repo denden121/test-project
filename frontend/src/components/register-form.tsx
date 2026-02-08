@@ -65,7 +65,7 @@ export function RegisterForm() {
         <CardTitle>{t('auth.registerTitle')}</CardTitle>
         <CardDescription>{t('auth.registerDescription')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} autoComplete="on">
         <CardContent className="space-y-4">
           {apiError && (
             <p className="text-sm text-destructive">{apiError}</p>
@@ -75,6 +75,7 @@ export function RegisterForm() {
             <Input
               id="register-email"
               type="email"
+              inputMode="email"
               autoComplete="email"
               placeholder="you@example.com"
               className="w-full"

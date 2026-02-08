@@ -61,7 +61,7 @@ export function LoginForm() {
         <CardTitle>{t('auth.loginTitle')}</CardTitle>
         <CardDescription>{t('auth.loginDescription')}</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} autoComplete="on">
         <CardContent className="space-y-4">
           {apiError && (
             <p className="text-sm text-destructive">{apiError}</p>
@@ -71,6 +71,7 @@ export function LoginForm() {
             <Input
               id="login-email"
               type="email"
+              inputMode="email"
               autoComplete="email"
               placeholder="you@example.com"
               className="w-full"
