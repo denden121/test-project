@@ -193,6 +193,11 @@ export function PublicWishlist() {
         </Card>
       )}
 
+      {wishlist.items.length === 0 ? (
+        <div className="rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center text-muted-foreground">
+          <p className="text-lg">{t('wishlist.emptyPublic')}</p>
+        </div>
+      ) : (
       <ul className="grid gap-4 sm:grid-cols-2">
         {wishlist.items.map((item) => (
           <li key={item.id}>
@@ -282,8 +287,27 @@ export function PublicWishlist() {
                       type="number"
                       step="0.01"
                       min="0.01"
-                      {...contributeForm.register('amount', { required: true, min: 0.01 })}
+                      max={toNum(item.price) - toNum(item.total_contributed)}
+                      {...contributeForm.register('amount', {
+                        required: true,
+                        min: 0.01,
+                        validate: (v) => {
+                          const amount = Number(v)
+                          const price = toNum(item.price)
+                          const total = toNum(item.total_contributed)
+                          const remaining = price - total
+                          if (amount > remaining) {
+                            return `${t('wishlist.amountExceedsRemaining')}: ${remaining.toFixed(2)}`
+                          }
+                          return true
+                        },
+                      })}
                     />
+                    {contributeForm.formState.errors.amount && (
+                      <p className="text-sm text-destructive">
+                        {contributeForm.formState.errors.amount.message}
+                      </p>
+                    )}
                     <div className="flex gap-2">
                       <Button type="submit" disabled={contributeForm.formState.isSubmitting}>
                         {t('wishlist.chipInSubmit')}
@@ -306,16 +330,18 @@ export function PublicWishlist() {
                     >
                       {t('wishlist.reserve')}
                     </Button>
-                    {item.price != null && toNum(item.price) > 0 && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setContributingItemId(item.id)}
-                      >
-                        {t('wishlist.chipIn')}
-                      </Button>
-                    )}
+                    {item.price != null &&
+                      toNum(item.price) > 0 &&
+                      toNum(item.total_contributed) < toNum(item.price) && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setContributingItemId(item.id)}
+                        >
+                          {t('wishlist.chipIn')}
+                        </Button>
+                      )}
                   </div>
                 )}
               </CardContent>
@@ -323,6 +349,7 @@ export function PublicWishlist() {
           </li>
         ))}
       </ul>
+      )}
     </div>
   )
 }

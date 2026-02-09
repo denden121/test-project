@@ -22,15 +22,27 @@ class User(Base):
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)  # None для OAuth-пользователей
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    wishlists: Mapped[list["Wishlist"]] = relationship(
+        "Wishlist",
+        back_populates="user",
+        cascade="save-update",
+    )
+
 
 class Wishlist(Base):
     """
     Список желаний. Создатель делится им по ссылке с уникальным slug.
     creator_secret — только создатель знает, нужен для редактирования списка.
+    user_id — владелец (если залогинен при создании); иначе None.
     """
     __tablename__ = "wishlists"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     title: Mapped[str] = mapped_column(String(255))  # Название списка
     occasion: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Повод: "День рождения", "Новый год"
     event_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # Дата события
@@ -38,6 +50,7 @@ class Wishlist(Base):
     creator_secret: Mapped[str] = mapped_column(String(64), default=generate_slug)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    user: Mapped["User | None"] = relationship("User", back_populates="wishlists")
     items: Mapped[list["WishlistItem"]] = relationship(
         "WishlistItem",
         back_populates="wishlist",

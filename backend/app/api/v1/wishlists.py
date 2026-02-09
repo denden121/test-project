@@ -3,8 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.deps import get_current_user, get_current_user_optional
 from app.db.session import get_db
-from app.models import Contribution, Reservation, Wishlist, WishlistItem
+from app.models import Contribution, Reservation, User, Wishlist, WishlistItem
 from app.schemas import (
     ContributionCreate,
     ContributionCreatedResponse,
@@ -22,6 +23,7 @@ from app.schemas import (
 )
 from app.services.websocket import ws_manager
 from app.services.wishlist import (
+    _total_contributed,
     broadcast_wishlist_update,
     get_wishlist_public_dict,
     item_to_response,
@@ -30,19 +32,55 @@ from app.services.wishlist import (
 router = APIRouter()
 
 
-# --- Создание списка ---
+# --- Создание списка (требуется авторизация) ---
 @router.post("", response_model=WishlistManageResponse)
-async def create_wishlist(data: WishlistCreate, db: AsyncSession = Depends(get_db)):
-    """Создать список желаний. Возвращает slug (для шаринга) и creator_secret (сохраните!)."""
+async def create_wishlist(
+    data: WishlistCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    """Создать список желаний. Если авторизован — привязывается к пользователю."""
     wishlist = Wishlist(
         title=data.title,
         occasion=data.occasion,
         event_date=data.event_date,
+        user_id=current_user.id if current_user else None,
     )
     db.add(wishlist)
     await db.flush()
     await db.refresh(wishlist)
     return wishlist
+
+
+# --- Мои вишлисты (по токену, требует авторизации) ---
+@router.get("/mine", response_model=list[WishlistManageDetailResponse])
+async def get_my_wishlists(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Список вишлистов текущего пользователя. Доступно с любого устройства."""
+    result = await db.execute(
+        select(Wishlist)
+        .where(Wishlist.user_id == current_user.id)
+        .options(
+            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
+            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
+        )
+    )
+    wishlists = result.scalars().all()
+    return [
+        WishlistManageDetailResponse(
+            id=w.id,
+            title=w.title,
+            occasion=w.occasion,
+            event_date=w.event_date,
+            slug=w.slug,
+            creator_secret=w.creator_secret,
+            created_at=w.created_at,
+            items=[item_to_response(i) for i in w.items],
+        )
+        for w in wishlists
+    ]
 
 
 # --- WebSocket для реалтайм-обновлений ---
@@ -319,6 +357,13 @@ async def contribute_item(
         raise HTTPException(status_code=400, detail="Подарок уже зарезервирован целиком")
     if item.price is None or item.price <= 0:
         raise HTTPException(status_code=400, detail="У товара не указана цена для сбора")
+
+    total = _total_contributed(item)
+    if total + data.amount > item.price:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Сумма вкладов не может превышать цену товара ({item.price}). Собрано: {total}, осталось: {item.price - total}",
+        )
 
     contribution = Contribution(
         wishlist_item_id=item.id,
