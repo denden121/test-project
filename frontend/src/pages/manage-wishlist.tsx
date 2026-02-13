@@ -38,6 +38,8 @@ type ItemFormValues = {
   image_url: string
 }
 
+const POPULAR_CURRENCIES = ['RUB', 'USD', 'EUR', 'GBP', 'CNY'] as const
+
 type ListFormValues = {
   title: string
   occasion: string
@@ -238,13 +240,22 @@ export function ManageWishlist() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="list-currency">{t('wishlist.currency')}</Label>
-              <Input
+              <select
                 id="list-currency"
                 {...listForm.register('currency')}
-                placeholder="RUB"
-                maxLength={3}
-                className="w-20 font-mono uppercase"
-              />
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {[
+                  ...(wishlist?.currency && !POPULAR_CURRENCIES.includes(wishlist.currency as (typeof POPULAR_CURRENCIES)[number])
+                    ? [wishlist.currency]
+                    : []),
+                  ...POPULAR_CURRENCIES,
+                ].map((code) => (
+                  <option key={code} value={code}>
+                    {code}
+                  </option>
+                ))}
+              </select>
             </div>
             <Button type="submit" disabled={listForm.formState.isSubmitting}>
               {t('common.save')}
