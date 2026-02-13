@@ -10,6 +10,7 @@ export type WishlistItemResponse = {
   title: string
   link: string | null
   price: number | string | null
+  min_contribution: number | string | null
   image_url: string | null
   sort_order: number
   is_reserved: boolean
@@ -36,6 +37,7 @@ export type WishlistManageResponse = {
   title: string
   occasion: string | null
   event_date: string | null
+  currency: string
   slug: string
   creator_secret: string
   created_at: string
@@ -50,6 +52,7 @@ export type WishlistPublicResponse = {
   title: string
   occasion: string | null
   event_date: string | null
+  currency: string
   slug: string
   items: WishlistItemResponse[]
 }

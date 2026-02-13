@@ -44,6 +44,7 @@ async def create_wishlist(
         title=data.title,
         occasion=data.occasion,
         event_date=data.event_date,
+        currency=(data.currency or "RUB").upper()[:3],
         user_id=current_user.id if current_user else None,
     )
     db.add(wishlist)
@@ -74,6 +75,7 @@ async def get_my_wishlists(
             title=w.title,
             occasion=w.occasion,
             event_date=w.event_date,
+            currency=getattr(w, "currency", None) or "RUB",
             slug=w.slug,
             creator_secret=w.creator_secret,
             created_at=w.created_at,
@@ -117,6 +119,7 @@ async def get_wishlist_public(slug: str, db: AsyncSession = Depends(get_db)):
         title=wishlist.title,
         occasion=wishlist.occasion,
         event_date=wishlist.event_date,
+        currency=getattr(wishlist, "currency", None) or "RUB",
         slug=wishlist.slug,
         items=[item_to_response(i) for i in wishlist.items],
     )
@@ -147,6 +150,7 @@ async def get_wishlist_manage(creator_secret: str, db: AsyncSession = Depends(ge
         title=wishlist.title,
         occasion=wishlist.occasion,
         event_date=wishlist.event_date,
+        currency=getattr(wishlist, "currency", None) or "RUB",
         slug=wishlist.slug,
         creator_secret=wishlist.creator_secret,
         created_at=wishlist.created_at,
@@ -158,9 +162,11 @@ async def get_wishlist_manage(creator_secret: str, db: AsyncSession = Depends(ge
 async def update_wishlist(
     creator_secret: str, data: WishlistUpdate, db: AsyncSession = Depends(get_db)
 ):
-    """Обновить название, повод и дату списка."""
+    """Обновить название, повод, дату и валюту списка."""
     wishlist = await get_wishlist_by_secret(creator_secret, db)
     update_data = data.model_dump(exclude_unset=True)
+    if "currency" in update_data and update_data["currency"]:
+        update_data["currency"] = str(update_data["currency"]).upper()[:3]
     for k, v in update_data.items():
         setattr(wishlist, k, v)
     await db.flush()
@@ -201,6 +207,7 @@ async def add_item(
         title=data.title,
         link=data.link,
         price=data.price,
+        min_contribution=data.min_contribution,
         image_url=data.image_url,
         sort_order=sort_order,
     )
@@ -363,6 +370,12 @@ async def contribute_item(
         raise HTTPException(
             status_code=400,
             detail=f"Сумма вкладов не может превышать цену товара ({item.price}). Собрано: {total}, осталось: {item.price - total}",
+        )
+    min_contrib = getattr(item, "min_contribution", None)
+    if min_contrib is not None and min_contrib > 0 and data.amount < min_contrib:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Минимальный вклад для этого товара: {min_contrib}",
         )
 
     contribution = Contribution(

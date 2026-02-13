@@ -23,6 +23,7 @@ def item_to_response(item: WishlistItem) -> WishlistItemResponse:
         title=item.title,
         link=item.link,
         price=item.price,
+        min_contribution=getattr(item, "min_contribution", None),
         image_url=item.image_url,
         sort_order=item.sort_order,
         is_reserved=item.reservation is not None,
@@ -49,6 +50,7 @@ async def get_wishlist_public_dict(slug: str, db: AsyncSession) -> dict | None:
         title=wishlist.title,
         occasion=wishlist.occasion,
         event_date=wishlist.event_date,
+        currency=getattr(wishlist, "currency", None) or "RUB",
         slug=wishlist.slug,
         items=[item_to_response(i) for i in wishlist.items],
     )

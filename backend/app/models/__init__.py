@@ -21,6 +21,8 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)  # None для OAuth-пользователей
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     wishlists: Mapped[list["Wishlist"]] = relationship(
         "Wishlist",
@@ -46,6 +48,7 @@ class Wishlist(Base):
     title: Mapped[str] = mapped_column(String(255))  # Название списка
     occasion: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Повод: "День рождения", "Новый год"
     event_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # Дата события
+    currency: Mapped[str] = mapped_column(String(3), default="RUB")  # Валюта списка: RUB, USD, EUR, ...
     slug: Mapped[str] = mapped_column(String(64), unique=True, default=generate_slug, index=True)
     creator_secret: Mapped[str] = mapped_column(String(64), default=generate_slug)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -68,6 +71,7 @@ class WishlistItem(Base):
     title: Mapped[str] = mapped_column(String(255))  # Название товара
     link: Mapped[str | None] = mapped_column(String(2048), nullable=True)  # Ссылка на товар
     price: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    min_contribution: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)  # Мин. вклад (опц.)
     image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)  # Картинка
     sort_order: Mapped[int] = mapped_column(default=0)  # Порядок отображения
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

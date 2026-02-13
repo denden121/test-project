@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useI18n } from '@/contexts/i18n-context'
 import { API_URL, type WishlistManageDetailResponse } from '@/lib/api'
-import { addStoredWishlist } from '@/lib/wishlist-storage'
 
 export function Dashboard() {
   const { t } = useI18n()
@@ -16,18 +15,7 @@ export function Dashboard() {
   useEffect(() => {
     axios
       .get<WishlistManageDetailResponse[]>(`${API_URL}/wishlists/mine`)
-      .then((r) => {
-        setLists(r.data)
-        r.data.forEach((w) =>
-          addStoredWishlist({
-            creator_secret: w.creator_secret,
-            slug: w.slug,
-            title: w.title,
-            occasion: w.occasion,
-            event_date: w.event_date,
-          })
-        )
-      })
+      .then((r) => setLists(r.data))
       .catch((e) => setError(e.response?.data?.detail ?? e.message))
       .finally(() => setLoading(false))
   }, [])

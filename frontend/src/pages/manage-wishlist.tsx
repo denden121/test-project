@@ -34,6 +34,7 @@ type ItemFormValues = {
   title: string
   link: string
   price: string
+  min_contribution: string
   image_url: string
 }
 
@@ -41,6 +42,7 @@ type ListFormValues = {
   title: string
   occasion: string
   event_date: string
+  currency: string
 }
 
 export function ManageWishlist() {
@@ -55,11 +57,11 @@ export function ManageWishlist() {
   const [linkCopied, setLinkCopied] = useState(false)
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ItemFormValues>({
-    defaultValues: { title: '', link: '', price: '', image_url: '' },
+    defaultValues: { title: '', link: '', price: '', min_contribution: '', image_url: '' },
   })
 
   const listForm = useForm<ListFormValues>({
-    defaultValues: { title: '', occasion: '', event_date: '' },
+    defaultValues: { title: '', occasion: '', event_date: '', currency: 'RUB' },
   })
 
   useEffect(() => {
@@ -77,6 +79,7 @@ export function ManageWishlist() {
         title: wishlist.title,
         occasion: wishlist.occasion ?? '',
         event_date: wishlist.event_date ?? '',
+        currency: wishlist.currency ?? 'RUB',
       })
     }
   }, [wishlist])
@@ -91,6 +94,7 @@ export function ManageWishlist() {
           title: data.title,
           occasion: data.occasion || null,
           event_date: data.event_date || null,
+          currency: data.currency || 'RUB',
         }
       )
       setWishlist((w) => (w ? { ...w, ...updated } : null))
@@ -113,7 +117,7 @@ export function ManageWishlist() {
 
   const openModalForCreate = () => {
     setEditingItem(null)
-    reset({ title: '', link: '', price: '', image_url: '' })
+    reset({ title: '', link: '', price: '', min_contribution: '', image_url: '' })
     setModalOpen(true)
   }
 
@@ -122,6 +126,7 @@ export function ManageWishlist() {
     setValue('title', item.title)
     setValue('link', item.link ?? '')
     setValue('price', item.price != null ? String(item.price) : '')
+    setValue('min_contribution', item.min_contribution != null ? String(item.min_contribution) : '')
     setValue('image_url', item.image_url ?? '')
     setModalOpen(true)
   }
@@ -129,7 +134,7 @@ export function ManageWishlist() {
   const closeModal = () => {
     setModalOpen(false)
     setEditingItem(null)
-    reset({ title: '', link: '', price: '', image_url: '' })
+    reset({ title: '', link: '', price: '', min_contribution: '', image_url: '' })
   }
 
   const onSaveItem = async (data: ItemFormValues) => {
@@ -139,6 +144,7 @@ export function ManageWishlist() {
       title: data.title,
       link: data.link || null,
       price: data.price ? Number(data.price) : null,
+      min_contribution: data.min_contribution ? Number(data.min_contribution) : null,
       image_url: data.image_url || null,
     }
     try {
@@ -230,6 +236,16 @@ export function ManageWishlist() {
                 {...listForm.register('event_date')}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="list-currency">{t('wishlist.currency')}</Label>
+              <Input
+                id="list-currency"
+                {...listForm.register('currency')}
+                placeholder="RUB"
+                maxLength={3}
+                className="w-20 font-mono uppercase"
+              />
+            </div>
             <Button type="submit" disabled={listForm.formState.isSubmitting}>
               {t('common.save')}
             </Button>
@@ -294,6 +310,17 @@ export function ManageWishlist() {
                   placeholder="0"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="modal-min-contribution">{t('wishlist.minContribution')}</Label>
+                <Input
+                  id="modal-min-contribution"
+                  {...register('min_contribution')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder={t('wishlist.minContributionPlaceholder')}
+                />
+              </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="modal-image">{t('wishlist.itemImage')}</Label>
                 <Input
@@ -321,6 +348,7 @@ export function ManageWishlist() {
           <li key={item.id}>
             <ItemRow
               item={item}
+              currency={wishlist.currency ?? 'RUB'}
               onEdit={() => openModalForEdit(item)}
               onDelete={() => onDeleteItem(item.id)}
               t={t}
@@ -349,11 +377,13 @@ export function ManageWishlist() {
 
 function ItemRow({
   item,
+  currency,
   onEdit,
   onDelete,
   t,
 }: {
   item: WishlistItemResponse
+  currency: string
   onEdit: () => void
   onDelete: () => void
   t: (k: string) => string
@@ -382,12 +412,14 @@ function ItemRow({
               </a>
             )}
             {item.price != null && (
-              <p className="text-sm text-muted-foreground">{item.price}</p>
+              <p className="text-sm text-muted-foreground">
+                {item.price} {currency}
+              </p>
             )}
             {item.price != null && Number(item.price) > 0 && (
               <div className="mt-1 space-y-0.5">
                 <p className="text-xs text-muted-foreground">
-                  {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)}
+                  {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {currency}
                 </p>
                 <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
                   <div

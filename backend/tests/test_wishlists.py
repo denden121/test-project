@@ -227,6 +227,60 @@ async def test_reserve_item_already_reserved(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_contribute_min_contribution_rejected(client: AsyncClient):
+    """Вклад ниже min_contribution — 400."""
+    create_r = await client.post("/api/wishlists", json={"title": "Список"})
+    slug = create_r.json()["slug"]
+    creator_secret = create_r.json()["creator_secret"]
+    add_r = await client.post(
+        f"/api/wishlists/m/{creator_secret}/items",
+        json={"title": "Подарок", "price": 1000, "min_contribution": 100},
+    )
+    item_id = add_r.json()["id"]
+
+    r = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Маша", "amount": 50},
+    )
+    assert r.status_code == 400
+    assert "Минимальный вклад" in r.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_contribute_min_contribution_accepted(client: AsyncClient):
+    """Вклад >= min_contribution — успех."""
+    create_r = await client.post("/api/wishlists", json={"title": "Список"})
+    slug = create_r.json()["slug"]
+    creator_secret = create_r.json()["creator_secret"]
+    add_r = await client.post(
+        f"/api/wishlists/m/{creator_secret}/items",
+        json={"title": "Подарок", "price": 1000, "min_contribution": 100},
+    )
+    item_id = add_r.json()["id"]
+
+    r = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Маша", "amount": 150},
+    )
+    assert r.status_code == 200
+    assert "contributor_secret" in r.json()
+
+
+@pytest.mark.asyncio
+async def test_wishlist_currency(client: AsyncClient):
+    """Валюта возвращается в ответах и по умолчанию RUB."""
+    r = await client.post("/api/wishlists", json={"title": "Список", "currency": "USD"})
+    assert r.status_code == 200
+    assert r.json().get("currency", "RUB") == "USD"
+    creator_secret = r.json()["creator_secret"]
+    slug = r.json()["slug"]
+    manage_r = await client.get(f"/api/wishlists/m/{creator_secret}")
+    assert manage_r.json().get("currency") == "USD"
+    public_r = await client.get(f"/api/wishlists/s/{slug}")
+    assert public_r.json().get("currency") == "USD"
+
+
+@pytest.mark.asyncio
 async def test_creator_sees_is_reserved_without_name(client: AsyncClient):
     """Создатель видит is_reserved=true, но не имя резервировавшего."""
     create_r = await client.post("/api/wishlists", json={"title": "Список"})

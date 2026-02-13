@@ -8,6 +8,7 @@ class WishlistCreate(BaseModel):
     title: str = Field(description="Название списка", examples=["День рождения Маши"])
     occasion: str | None = Field(None, description="Повод", examples=["День рождения", "Новый год"])
     event_date: date | None = Field(None, description="Дата события")
+    currency: str = Field(default="RUB", min_length=1, max_length=3, description="Валюта: RUB, USD, EUR, ...")
 
     model_config = {
         "json_schema_extra": {
@@ -21,6 +22,7 @@ class WishlistUpdate(BaseModel):
     title: str | None = None
     occasion: str | None = None
     event_date: date | None = None
+    currency: str | None = None
 
 
 class WishlistResponse(BaseModel):
@@ -28,6 +30,7 @@ class WishlistResponse(BaseModel):
     title: str
     occasion: str | None = None
     event_date: date | None = None
+    currency: str = "RUB"
     slug: str
     created_at: datetime
 
@@ -44,6 +47,7 @@ class WishlistItemCreate(BaseModel):
     title: str = Field(description="Название товара")
     link: str | None = Field(None, description="Ссылка на товар")
     price: Decimal | None = Field(None, description="Цена")
+    min_contribution: Decimal | None = Field(None, ge=0, description="Минимальный вклад (опционально)")
     image_url: str | None = Field(None, description="URL картинки")
 
     model_config = {
@@ -64,6 +68,7 @@ class WishlistItemUpdate(BaseModel):
     title: str | None = None
     link: str | None = None
     price: Decimal | None = None
+    min_contribution: Decimal | None = None
     image_url: str | None = None
 
 
@@ -73,6 +78,7 @@ class WishlistItemResponse(BaseModel):
     title: str
     link: str | None
     price: Decimal | None
+    min_contribution: Decimal | None = None
     image_url: str | None
     sort_order: int
     is_reserved: bool
@@ -89,6 +95,7 @@ class WishlistPublicResponse(BaseModel):
     title: str
     occasion: str | None = None
     event_date: date | None = None
+    currency: str = "RUB"
     slug: str
     items: list[WishlistItemResponse]
 

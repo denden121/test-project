@@ -224,12 +224,14 @@ export function PublicWishlist() {
                   </a>
                 )}
                 {item.price != null && (
-                  <p className="text-sm text-muted-foreground">{item.price}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {item.price} {wishlist.currency ?? 'RUB'}
+                  </p>
                 )}
                 {item.price != null && toNum(item.price) > 0 && !item.is_reserved && (
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)}</span>
+                      <span>{t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {wishlist.currency ?? 'RUB'}</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-muted">
                       <div
@@ -286,16 +288,21 @@ export function PublicWishlist() {
                       id={`contributor-amount-${item.id}`}
                       type="number"
                       step="0.01"
-                      min="0.01"
+                      min={toNum(item.min_contribution) || 0.01}
                       max={toNum(item.price) - toNum(item.total_contributed)}
+                      placeholder={toNum(item.min_contribution) > 0 ? `${t('wishlist.minContributionHint')} ${item.min_contribution}` : undefined}
                       {...contributeForm.register('amount', {
                         required: true,
-                        min: 0.01,
+                        min: toNum(item.min_contribution) || 0.01,
                         validate: (v) => {
                           const amount = Number(v)
                           const price = toNum(item.price)
                           const total = toNum(item.total_contributed)
                           const remaining = price - total
+                          const minContrib = toNum(item.min_contribution)
+                          if (minContrib > 0 && amount < minContrib) {
+                            return `${t('wishlist.amountBelowMin')} ${minContrib}`
+                          }
                           if (amount > remaining) {
                             return `${t('wishlist.amountExceedsRemaining')}: ${remaining.toFixed(2)}`
                           }
