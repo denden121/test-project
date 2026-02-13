@@ -45,6 +45,9 @@ async def init_db():
             "ALTER TABLE wishlists ADD CONSTRAINT fk_wishlists_user_id "
             "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL",
             "CREATE INDEX IF NOT EXISTS ix_wishlists_user_id ON wishlists(user_id)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255) NULL",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP NULL",
+            "CREATE INDEX IF NOT EXISTS ix_users_password_reset_token ON users(password_reset_token)",
         ):
             try:
                 await conn.execute(text(stmt))
