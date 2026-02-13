@@ -153,6 +153,12 @@ export function PublicWishlist() {
         {occasionOrDate || t('wishlist.publicTitle')}
       </p>
 
+      {error && (
+        <p className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
       {reservedResult && (
         <Card className="border-primary/50 bg-primary/5">
           <CardHeader>
@@ -344,7 +350,10 @@ export function PublicWishlist() {
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={() => setContributingItemId(item.id)}
+                          onClick={() => {
+                            setError(null)
+                            setContributingItemId(item.id)
+                          }}
                         >
                           {t('wishlist.chipIn')}
                         </Button>

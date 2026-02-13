@@ -267,6 +267,41 @@ async def test_contribute_min_contribution_accepted(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_contribute_exceeds_price_rejected(client: AsyncClient):
+    """Вклад не может превышать оставшуюся до целевой суммы."""
+    create_r = await client.post("/api/wishlists", json={"title": "Список"})
+    slug = create_r.json()["slug"]
+    creator_secret = create_r.json()["creator_secret"]
+    add_r = await client.post(
+        f"/api/wishlists/m/{creator_secret}/items",
+        json={"title": "Подарок", "price": 1000},
+    )
+    item_id = add_r.json()["id"]
+
+    # Первый вклад 600 — ок
+    r1 = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Маша", "amount": 600},
+    )
+    assert r1.status_code == 200
+
+    # Второй вклад 500 — уже 1100 > 1000, должен быть 400
+    r2 = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Петя", "amount": 500},
+    )
+    assert r2.status_code == 400
+    assert "превышать цену" in r2.json()["detail"] or "Собрано" in r2.json()["detail"]
+
+    # Вклад ровно на остаток 400 — ок
+    r3 = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Петя", "amount": 400},
+    )
+    assert r3.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_wishlist_currency(client: AsyncClient):
     """Валюта возвращается в ответах и по умолчанию RUB."""
     r = await client.post("/api/wishlists", json={"title": "Список", "currency": "USD"})

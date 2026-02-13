@@ -344,20 +344,24 @@ async def contribute_item(
 ):
     """
     Добавить вклад в подарок. Владелец видит только общую сумму по товару, не кто сколько скинул.
+    Ограничение: total_contributed + amount не может превышать цену товара.
     """
-    result = await db.execute(
-        select(Wishlist)
-        .where(Wishlist.slug == slug)
-        .options(
-            selectinload(Wishlist.items).selectinload(WishlistItem.contributions),
-            selectinload(Wishlist.items).selectinload(WishlistItem.reservation),
-        )
-    )
+    result = await db.execute(select(Wishlist).where(Wishlist.slug == slug))
     wishlist = result.scalar_one_or_none()
     if not wishlist:
         raise HTTPException(status_code=404, detail="Список не найден")
 
-    item = next((i for i in wishlist.items if i.id == item_id), None)
+    # Блокируем строку товара, чтобы не допустить превышение целевой суммы при одновременных запросах
+    item_result = await db.execute(
+        select(WishlistItem)
+        .where(WishlistItem.id == item_id, WishlistItem.wishlist_id == wishlist.id)
+        .options(
+            selectinload(WishlistItem.contributions),
+            selectinload(WishlistItem.reservation),
+        )
+        .with_for_update()
+    )
+    item = item_result.scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Товар не найден")
     if item.reservation:
