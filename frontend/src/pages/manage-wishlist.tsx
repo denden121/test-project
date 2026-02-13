@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -21,6 +21,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useI18n } from '@/contexts/i18n-context'
 import { API_URL, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
 import { removeStoredWishlist, updateStoredWishlistTitle } from '@/lib/wishlist-storage'
@@ -57,6 +64,8 @@ export function ManageWishlist() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistItemResponse | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [shareSuccess, setShareSuccess] = useState(false)
+  const canShare = typeof navigator !== 'undefined' && 'share' in navigator
 
   const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ItemFormValues>({
     defaultValues: { title: '', link: '', price: '', min_contribution: '', image_url: '' },
@@ -115,6 +124,27 @@ export function ManageWishlist() {
     navigator.clipboard.writeText(shareUrl)
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 2000)
+  }
+
+  const shareLink = async () => {
+    if (!shareUrl) return
+    if (canShare) {
+      try {
+        await navigator.share({
+          title: wishlist?.title ?? t('wishlist.publicTitle'),
+          url: shareUrl,
+          text: wishlist?.title ?? t('wishlist.publicTitle'),
+        })
+        setShareSuccess(true)
+        setTimeout(() => setShareSuccess(false), 2000)
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          copyLink()
+        }
+      }
+    } else {
+      copyLink()
+    }
   }
 
   const openModalForCreate = () => {
@@ -240,22 +270,29 @@ export function ManageWishlist() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="list-currency">{t('wishlist.currency')}</Label>
-              <select
-                id="list-currency"
-                {...listForm.register('currency')}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {[
-                  ...(wishlist?.currency && !POPULAR_CURRENCIES.includes(wishlist.currency as (typeof POPULAR_CURRENCIES)[number])
-                    ? [wishlist.currency]
-                    : []),
-                  ...POPULAR_CURRENCIES,
-                ].map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="currency"
+                control={listForm.control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="list-currency" className="font-mono">
+                      <SelectValue placeholder="RUB" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        ...(wishlist?.currency && !POPULAR_CURRENCIES.includes(wishlist.currency as (typeof POPULAR_CURRENCIES)[number])
+                          ? [wishlist.currency]
+                          : []),
+                        ...POPULAR_CURRENCIES,
+                      ].map((code) => (
+                        <SelectItem key={code} value={code}>
+                          {code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             <Button type="submit" disabled={listForm.formState.isSubmitting}>
               {t('common.save')}
@@ -269,8 +306,17 @@ export function ManageWishlist() {
           <CardTitle>{t('wishlist.shareLink')}</CardTitle>
           <CardDescription>{t('wishlist.copyLink')}</CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-2">
-          <Input readOnly value={shareUrl} className="font-mono text-sm" />
+        <CardContent className="flex flex-wrap gap-2">
+          <Input readOnly value={shareUrl} className="font-mono text-sm flex-1 min-w-0" />
+          {canShare && (
+            <Button
+              type="button"
+              onClick={shareLink}
+              className={shareSuccess ? 'opacity-90' : ''}
+            >
+              {shareSuccess ? t('wishlist.shared') : t('wishlist.share')}
+            </Button>
+          )}
           <Button type="button" variant="secondary" onClick={copyLink}>
             {linkCopied ? t('wishlist.copied') : t('wishlist.copyLink')}
           </Button>
