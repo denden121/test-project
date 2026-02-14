@@ -45,24 +45,14 @@ export function BottomNav() {
           </button>
         </>
       ) : (
-        <>
-          <Link
-            to="/"
-            className={cn(navItemClass)}
-            aria-current={location.pathname === '/' ? 'page' : undefined}
-          >
-            <List className="size-6 shrink-0" aria-hidden />
-            <span>{t('nav.myLists')}</span>
-          </Link>
-          <Link
-            to="/login"
-            className={cn(navItemClass)}
-            aria-current={location.pathname === '/login' ? 'page' : undefined}
-          >
-            <LogIn className="size-6 shrink-0" aria-hidden />
-            <span>{t('auth.login')}</span>
-          </Link>
-        </>
+        <Link
+          to="/login"
+          className={cn(navItemClass)}
+          aria-current={location.pathname === '/login' ? 'page' : undefined}
+        >
+          <LogIn className="size-6 shrink-0" aria-hidden />
+          <span>{t('auth.login')}</span>
+        </Link>
       )}
     </nav>
   )
