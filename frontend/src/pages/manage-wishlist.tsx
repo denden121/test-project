@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
 import axios from 'axios'
-import { Plus, Share2, ChevronLeft, MoreVertical, ArrowUpDown, ChevronDown, Pencil, Trash2, Gift } from 'lucide-react'
+import { Plus, Share2, ChevronLeft, MoreVertical, ChevronDown, Pencil, Trash2, Gift } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -332,10 +332,6 @@ export function ManageWishlist() {
             <DropdownMenuItem onClick={() => setListEditOpen(true)}>
               <Pencil className="size-4 shrink-0" aria-hidden />
               {t('wishlist.editList')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}} disabled>
-              <ArrowUpDown className="size-4 shrink-0" aria-hidden />
-              {t('wishlist.configureOrder')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={shareLink}>
               <Share2 className="size-4 shrink-0" aria-hidden />

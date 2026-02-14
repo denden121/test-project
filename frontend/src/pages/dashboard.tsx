@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { Gift, MoreVertical, Pencil, ArrowUpDown, Share2, Trash2 } from 'lucide-react'
+import { Gift, MoreVertical, Pencil, Share2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -96,13 +96,18 @@ export function Dashboard() {
               <li key={w.id}>
                 <Card>
                   <CardContent className="flex items-center gap-3 p-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Gift className="size-6 text-primary" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold leading-tight">{w.title}</p>
-                      <p className="text-sm text-muted-foreground">{giftLabel}</p>
-                    </div>
+                    <Link
+                      to={`/wishlists/manage/${w.creator_secret}`}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-md outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Gift className="size-6 text-primary" aria-hidden />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold leading-tight">{w.title}</p>
+                        <p className="text-sm text-muted-foreground">{giftLabel}</p>
+                      </div>
+                    </Link>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label={t('wishlist.manage')}>
@@ -115,10 +120,6 @@ export function Dashboard() {
                             <Pencil className="size-4 shrink-0" aria-hidden />
                             {t('wishlist.edit')}
                           </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled>
-                          <ArrowUpDown className="size-4 shrink-0" aria-hidden />
-                          {t('wishlist.configureGiftOrder')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => shareList(w)}>
                           <Share2 className="size-4 shrink-0" aria-hidden />
