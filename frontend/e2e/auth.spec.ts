@@ -11,7 +11,7 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
     await expect(page).toHaveURL(/\/$/)
-    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Создать список' }).first()).toBeVisible({ timeout: 15000 })
   })
 
   test('T1.1.2 Регистрация с уже занятым email', async ({ page, request }) => {
@@ -52,7 +52,7 @@ test.describe('Auth', () => {
     await page.locator('#register-password-confirm').fill('123')
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
-    await expect(page.getByText(/Пароль не менее|at least 8/i)).toBeVisible()
+    await expect(page.getByText(/Пароль не менее|at least 8/i).first()).toBeVisible()
     await expect(page).toHaveURL(/\/login/)
   })
 
@@ -70,7 +70,7 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: 'Войти' }).click()
 
     await expect(page).toHaveURL(/\/$/)
-    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Создать список' }).first()).toBeVisible({ timeout: 15000 })
   })
 
   test('T1.2.2 Неверный пароль', async ({ page, request }) => {
@@ -101,9 +101,11 @@ test.describe('Auth', () => {
   test('T1.2.4 Выход', async ({ page, request }) => {
     const email = `logout-${Date.now()}@example.com`
     const apiBase = process.env.API_URL || 'http://localhost:8000'
-    const body = await request.post(`${apiBase}/api/auth/register`, {
+    const reg = await request.post(`${apiBase}/api/auth/register`, {
       data: { email, password: 'password123' },
-    }).then(r => r.json())
+    })
+    if (!reg.ok) throw new Error(`Register failed: ${reg.status} ${await reg.text()}`)
+    const body = await reg.json()
     const token = body.access_token
 
     await page.goto('/')
@@ -111,7 +113,7 @@ test.describe('Auth', () => {
       localStorage.setItem('auth_token', t)
     }, token)
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Создать список' }).first()).toBeVisible({ timeout: 15000 })
 
     // На десктопе «Выйти» в выпадающем меню профиля; на мобильном — кнопка в bottom nav
     const logoutButton = page.getByRole('button', { name: 'Выйти' })

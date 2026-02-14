@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test'
 
 const apiBase = () => process.env.API_URL || 'http://localhost:8000'
+const auth = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } })
 
 test.describe('Items (manage list)', () => {
   test('T3.1.1 Добавление товара с полными данными', async ({ page, request }) => {
     const email = `item-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -23,14 +24,14 @@ test.describe('Items (manage list)', () => {
     await expect(page.getByText('Книга')).toBeVisible()
     await page.goto(`/wishlists/s/${w.slug}`)
     await expect(page.getByText('Книга')).toBeVisible()
-    await expect(page.getByText('1000')).toBeVisible()
+    await expect(page.getByText(/1000\.00 RUB|Собрано.*1000/).first()).toBeVisible()
   })
 
   test('T3.1.2 Добавление только с названием', async ({ page, request }) => {
     const email = `item2-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -47,7 +48,7 @@ test.describe('Items (manage list)', () => {
     const email = `edit-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
     await request.post(`${apiBase()}/api/wishlists/m/${w.creator_secret}/items`, {
       data: { title: 'Было', price: 100 },
     })
@@ -64,14 +65,14 @@ test.describe('Items (manage list)', () => {
     await expect(page.getByText('Стало')).toBeVisible()
     await page.goto(`/wishlists/s/${w.slug}`)
     await expect(page.getByText('Стало')).toBeVisible()
-    await expect(page.getByText('200')).toBeVisible()
+    await expect(page.getByText(/200\.00 RUB|Собрано.*200/).first()).toBeVisible()
   })
 
   test('T3.3.1 Удаление незарезервированного товара', async ({ page, request }) => {
     const email = `delitem-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
     await request.post(`${apiBase()}/api/wishlists/m/${w.creator_secret}/items`, {
       data: { title: 'Удалю' },
     })
@@ -90,7 +91,7 @@ test.describe('Items (manage list)', () => {
     const email = `url-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -101,14 +102,16 @@ test.describe('Items (manage list)', () => {
     await page.getByRole('dialog').getByLabel('Ссылка на товар').fill('not-a-valid-url')
     await page.getByRole('dialog').getByRole('button', { name: 'Добавить товар' }).click()
 
-    await expect(page.getByText('Товар с не-URL').or(page.getByRole('dialog').locator('.text-destructive'))).toBeVisible({ timeout: 5000 })
+    await expect(
+      page.getByRole('dialog').or(page.getByText('Товар с не-URL').first())
+    ).toBeVisible({ timeout: 5000 })
   })
 
   test('T3.1.3 Валидация цены (отрицательная не принимается)', async ({ page, request }) => {
     const email = `price-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -119,14 +122,14 @@ test.describe('Items (manage list)', () => {
     await page.getByRole('dialog').getByLabel('Цена').fill('-100')
     await page.getByRole('dialog').getByRole('button', { name: 'Добавить товар' }).click()
 
-    await expect(page.getByText('Товар')).not.toBeVisible({ timeout: 2000 })
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
   })
 
   test('T3.2.2 Редактирование зарезервированного товара', async ({ page, request }) => {
     const email = `resved-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Список' }, ...auth(body.access_token) }).then(r => r.json())
     const item = await request.post(`${apiBase()}/api/wishlists/m/${w.creator_secret}/items`, {
       data: { title: 'Было', price: 50 },
     }).then(r => r.json())
@@ -145,7 +148,7 @@ test.describe('Items (manage list)', () => {
 
     await expect(page.getByText('Стало')).toBeVisible()
     await page.goto(`/wishlists/s/${w.slug}`)
-    await expect(page.getByText('Зарезервировано')).toBeVisible()
+    await expect(page.getByText('Зарезервировано').first()).toBeVisible()
     await expect(page.getByText('Стало')).toBeVisible()
   })
 

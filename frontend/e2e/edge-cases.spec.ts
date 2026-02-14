@@ -40,7 +40,7 @@ test.describe('Edge cases & security', () => {
     })
 
     await page.goto(`/wishlists/s/${w.slug}`)
-    await expect(page.getByText('Зарезервировано')).toBeVisible()
+    await expect(page.getByText('Зарезервировано').first()).toBeVisible()
     const chipInOnReserved = page.locator('li').filter({ hasText: 'Зарезервировано' }).getByRole('button', { name: 'Скинуться' })
     await expect(chipInOnReserved).toHaveCount(0)
   })

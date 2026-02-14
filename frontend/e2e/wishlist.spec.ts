@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 const apiBase = () => process.env.API_URL || 'http://localhost:8000'
+const auth = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } })
 
 test.describe('Wishlist', () => {
   test('T2.1.1 Успешное создание списка', async ({ page, request }) => {
@@ -15,7 +16,7 @@ test.describe('Wishlist', () => {
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Создать список' }).first()).toBeVisible({ timeout: 15000 })
 
     await page.getByRole('link', { name: 'Создать список' }).first().click()
     await expect(page).toHaveURL(/\/wishlists\/new/)
@@ -45,7 +46,7 @@ test.describe('Wishlist', () => {
     const email = `slug-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'День рождения' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'День рождения' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto(`/wishlists/s/${w.slug}`)
     await expect(page).toHaveURL(new RegExp(`/wishlists/s/${w.slug}`))
@@ -56,7 +57,7 @@ test.describe('Wishlist', () => {
     const email = `del-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Удалю' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Удалю' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -76,7 +77,7 @@ test.describe('Wishlist', () => {
     const email = `editlist-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Было' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Было' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto('/')
     await page.evaluate((t: string) => localStorage.setItem('auth_token', t), body.access_token)
@@ -93,7 +94,7 @@ test.describe('Wishlist', () => {
     const email = `copy-${Date.now()}@example.com`
     await request.post(`${apiBase()}/api/auth/register`, { data: { email, password: 'password123' } })
     const body = await request.post(`${apiBase()}/api/auth/login`, { data: { email, password: 'password123' } }).then(r => r.json())
-    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Для шаринга' } }).then(r => r.json())
+    const w = await request.post(`${apiBase()}/api/wishlists`, { data: { title: 'Для шаринга' }, ...auth(body.access_token) }).then(r => r.json())
 
     await page.goto(`/wishlists/manage/${w.creator_secret}`)
     await expect(page.getByText(/Ссылка для друзей|Share link/i)).toBeVisible()

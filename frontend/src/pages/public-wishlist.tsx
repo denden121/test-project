@@ -292,6 +292,9 @@ export function PublicWishlist() {
                       placeholder={t('wishlist.reserveNamePlaceholder')}
                       autoFocus
                     />
+                    {reserveForm.formState.errors.reserver_name && (
+                      <p className="text-sm text-destructive">{t('auth.fieldRequired')}</p>
+                    )}
                     <div className="flex gap-2">
                       <Button type="submit" disabled={reserveForm.formState.isSubmitting}>
                         {t('wishlist.reserveSubmit')}

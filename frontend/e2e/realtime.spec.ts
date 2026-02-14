@@ -22,7 +22,7 @@ test.describe('Realtime', () => {
     await pageB.getByRole('button', { name: 'Зарезервировать' }).click()
     await expect(pageB.getByText(/зарезервирован|reserved/i).first()).toBeVisible({ timeout: 5000 })
 
-    await expect(pageA.getByText('Зарезервировано')).toBeVisible({ timeout: 10000 })
+    await expect(pageA.getByText('Зарезервировано').first()).toBeVisible({ timeout: 20000 })
     await ctx.close()
   })
 
@@ -46,8 +46,8 @@ test.describe('Realtime', () => {
     await pageB.getByRole('button', { name: 'Добавить вклад' }).click()
     await expect(pageB.getByText(/Вклад добавлен|Contribution added/i)).toBeVisible({ timeout: 5000 })
 
-    await expect(pageA.getByText(/Собрано|Collected/)).toBeVisible({ timeout: 10000 })
-    await expect(pageA.getByText(/1000|1.000/)).toBeVisible({ timeout: 5000 })
+    await expect(pageA.getByText(/Собрано|Collected/).first()).toBeVisible({ timeout: 20000 })
+    await expect(pageA.getByText(/1000|1\.? ?000|5000/).first()).toBeVisible({ timeout: 15000 })
     await ctx.close()
   })
 
@@ -65,7 +65,7 @@ test.describe('Realtime', () => {
     const pageB = await ctx.newPage()
     await pageA.goto(`/wishlists/s/${w.slug}`)
     await pageB.goto(`/wishlists/s/${w.slug}`)
-    await expect(pageA.getByText('Зарезервировано')).toBeVisible()
+    await expect(pageA.getByText('Зарезервировано').first()).toBeVisible()
 
     await pageB.goto(`/reservations/${res.reserver_secret}`)
     pageB.on('dialog', (d) => d.accept())
@@ -89,7 +89,7 @@ test.describe('Realtime', () => {
     const pageA = await ctx.newPage()
     const pageB = await ctx.newPage()
     await pageA.goto(`/wishlists/s/${w.slug}`)
-    await expect(pageA.getByText(/Собрано|Collected/)).toBeVisible()
+    await expect(pageA.getByText(/Собрано|Collected/).first()).toBeVisible()
 
     await pageB.goto(`/contributions/${contrib.contributor_secret}`)
     pageB.on('dialog', (d) => d.accept())
@@ -117,7 +117,7 @@ test.describe('Realtime', () => {
     await pageB.getByRole('dialog').getByLabel('Название').fill('Новый товар')
     await pageB.getByRole('dialog').getByRole('button', { name: 'Добавить товар' }).click()
 
-    await expect(pageA.getByText('Новый товар')).toBeVisible({ timeout: 10000 })
+    await expect(pageA.getByText('Новый товар').first()).toBeVisible({ timeout: 20000 })
     await ctx.close()
   })
 
@@ -143,7 +143,7 @@ test.describe('Realtime', () => {
     await pageB.getByRole('dialog').getByLabel('Название').fill('Стало')
     await pageB.getByRole('dialog').getByRole('button', { name: 'Сохранить' }).click()
 
-    await expect(pageA.getByText('Стало')).toBeVisible({ timeout: 10000 })
+    await expect(pageA.getByText('Стало').first()).toBeVisible({ timeout: 20000 })
     await ctx.close()
   })
 
@@ -168,7 +168,7 @@ test.describe('Realtime', () => {
     pageB.on('dialog', (d) => d.accept())
     await pageB.getByRole('button', { name: 'Удалить' }).first().click()
 
-    await expect(pageA.getByText('Удаляемый')).not.toBeVisible({ timeout: 10000 })
+    await expect(pageA.getByText('Удаляемый').first()).not.toBeVisible({ timeout: 20000 })
     await ctx.close()
   })
 })

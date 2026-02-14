@@ -195,7 +195,7 @@ async def test_reset_password_success(client: AsyncClient, db_session):
     assert "access_token" in r_login_new.json()
 
     # Токен сброса обнулён
-    await db_session.expire_all()  # сброс identity map, чтобы подтянуть данные после commit приложения
+    db_session.expire_all()  # сброс identity map, чтобы подтянуть данные после commit приложения
     result = await db_session.execute(
         select(User).where(User.email == "resetflow@example.com")
     )
