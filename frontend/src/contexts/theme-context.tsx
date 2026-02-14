@@ -36,6 +36,7 @@ function getStoredTheme(): Theme {
 
 function applyTheme(resolved: 'light' | 'dark') {
   const root = document.documentElement
+  if (root.classList.contains(resolved)) return
   root.classList.remove('light', 'dark')
   root.classList.add(resolved)
 }
