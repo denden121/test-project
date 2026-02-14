@@ -2,17 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import useWebSocket from 'react-use-websocket'
 import axios from 'axios'
-import { Plus } from 'lucide-react'
+import { Plus, Share2, ChevronLeft, MoreVertical, ArrowUpDown, ChevronDown, Pencil, Trash2, Gift } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/contexts/i18n-context'
 import { API_URL, type FetchProductResponse, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
@@ -68,6 +68,7 @@ export function ManageWishlist() {
   const [editingItem, setEditingItem] = useState<WishlistItemResponse | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [shareSuccess, setShareSuccess] = useState(false)
+  const [listEditOpen, setListEditOpen] = useState(false)
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator
 
   const { register, handleSubmit, reset, setValue, getValues, watch, formState: { isSubmitting } } = useForm<ItemFormValues>({
@@ -310,119 +311,68 @@ export function ManageWishlist() {
   if (!wishlist) return <p className="text-muted-foreground">{t('common.notFound')}</p>
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{wishlist.title}</h1>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/">{t('common.back')}</Link>
+    <div className="space-y-4">
+      {/* Header: back, title, kebab */}
+      <div className="flex min-h-[44px] items-center justify-between gap-2">
+        <Button variant="ghost" size="icon" className="shrink-0" asChild>
+          <Link to="/" aria-label={t('common.back')}>
+            <ChevronLeft className="size-6" aria-hidden />
+          </Link>
+        </Button>
+        <h1 className="min-w-0 flex-1 truncate text-center text-lg font-semibold" id="wishlist-title">
+          {wishlist.title}
+        </h1>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label={t('wishlist.manage')}>
+              <MoreVertical className="size-5" aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setListEditOpen(true)}>
+              <Pencil className="size-4 shrink-0" aria-hidden />
+              {t('wishlist.editList')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {}} disabled>
+              <ArrowUpDown className="size-4 shrink-0" aria-hidden />
+              {t('wishlist.configureOrder')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={shareLink}>
+              <Share2 className="size-4 shrink-0" aria-hidden />
+              {t('wishlist.share')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onDeleteList} className="text-destructive focus:text-destructive">
+              <Trash2 className="size-4 shrink-0" aria-hidden />
+              {t('common.delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Two main action buttons */}
+      <div className="grid grid-cols-2 gap-3">
+        <Button type="button" variant="outline" className="h-auto flex-col gap-1.5 py-4" onClick={openModalForCreate}>
+          <Plus className="size-6 shrink-0" aria-hidden />
+          <span>{t('wishlist.addGift')}</span>
+        </Button>
+        <Button type="button" variant="outline" className="h-auto flex-col gap-1.5 py-4" onClick={shareLink}>
+          <Share2 className="size-6 shrink-0" aria-hidden />
+          <span>{shareSuccess ? t('wishlist.shared') : linkCopied ? t('wishlist.copied') : t('wishlist.shareWishlist')}</span>
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('wishlist.editList')}</CardTitle>
-          <CardDescription>{t('wishlist.listTitle')}</CardDescription>
-        </CardHeader>
-        <form onSubmit={listForm.handleSubmit(onSaveList)}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="list-title">{t('wishlist.listTitle')}</Label>
-              <Input
-                id="list-title"
-                maxLength={200}
-                {...listForm.register('title', { required: true })}
-                placeholder={t('wishlist.listTitlePlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="list-occasion">{t('wishlist.occasion')}</Label>
-              <Input
-                id="list-occasion"
-                maxLength={200}
-                {...listForm.register('occasion')}
-                placeholder={t('wishlist.occasionPlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="list-event_date">{t('wishlist.eventDate')}</Label>
-              <Input
-                id="list-event_date"
-                type="date"
-                {...listForm.register('event_date')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="list-currency">{t('wishlist.currency')}</Label>
-              <Controller
-                name="currency"
-                control={listForm.control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="list-currency" className="font-mono">
-                      <SelectValue placeholder="RUB" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[
-                        ...(wishlist?.currency && !POPULAR_CURRENCIES.includes(wishlist.currency as (typeof POPULAR_CURRENCIES)[number])
-                          ? [wishlist.currency]
-                          : []),
-                        ...POPULAR_CURRENCIES,
-                      ].map((code) => (
-                        <SelectItem key={code} value={code}>
-                          {code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            <Button type="submit" disabled={listForm.formState.isSubmitting}>
-              {t('common.save')}
-            </Button>
-          </CardContent>
-        </form>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('wishlist.shareLink')}</CardTitle>
-          <CardDescription>{t('wishlist.copyLink')}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Input readOnly value={shareUrl} className="font-mono text-sm flex-1 min-w-0" />
-          {canShare && (
-            <Button
-              type="button"
-              onClick={shareLink}
-              className={shareSuccess ? 'opacity-90' : ''}
-            >
-              {shareSuccess ? t('wishlist.shared') : t('wishlist.share')}
-            </Button>
-          )}
-          <Button type="button" variant="secondary" onClick={copyLink}>
-            {linkCopied ? t('wishlist.copied') : t('wishlist.copyLink')}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{t('wishlist.manage')}</h2>
-        <Button onClick={openModalForCreate} className="md:inline-flex hidden">
-          {t('wishlist.addItem')}
-        </Button>
+      {/* Sort / filter bar */}
+      <div className="flex items-center justify-between border-b border-border pb-2 text-sm">
+        <button type="button" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground" onClick={() => {}} disabled>
+          <ArrowUpDown className="size-4 shrink-0" aria-hidden />
+          {t('wishlist.configureOrder')}
+        </button>
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <span>{t('wishlist.allGifts')}</span>
+          <ChevronDown className="size-4 shrink-0" aria-hidden />
+        </div>
       </div>
-
-      {/* FAB: основное действие в зоне большого пальца на мобильных */}
-      <Button
-        type="button"
-        size="icon"
-        onClick={openModalForCreate}
-        className="fixed bottom-20 right-4 z-10 shadow-lg md:hidden pb-[env(safe-area-inset-bottom)]"
-        aria-label={t('wishlist.addItem')}
-      >
-        <Plus className="size-6" aria-hidden />
-      </Button>
 
       <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
         <DialogContent>
@@ -530,17 +480,79 @@ export function ManageWishlist() {
         <p className="text-sm text-muted-foreground">{t('wishlist.noLists')}</p>
       )}
 
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">{t('wishlist.deleteList')}</CardTitle>
-          <CardDescription>{t('wishlist.deleteConfirm')}</CardDescription>
-        </CardHeader>
-        <CardFooter>
-          <Button variant="destructive" onClick={onDeleteList}>
-            {t('common.delete')}
-          </Button>
-        </CardFooter>
-      </Card>
+      {/* List edit dialog (opened from header kebab) */}
+      <Dialog open={listEditOpen} onOpenChange={setListEditOpen}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>{t('wishlist.editList')}</DialogTitle>
+            <DialogDescription>{t('wishlist.listTitle')}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={listForm.handleSubmit((d) => { onSaveList(d); setListEditOpen(false); })}>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="list-title">{t('wishlist.listTitle')}</Label>
+                <Input
+                  id="list-title"
+                  maxLength={200}
+                  {...listForm.register('title', { required: true })}
+                  placeholder={t('wishlist.listTitlePlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="list-occasion">{t('wishlist.occasion')}</Label>
+                <Input
+                  id="list-occasion"
+                  maxLength={200}
+                  {...listForm.register('occasion')}
+                  placeholder={t('wishlist.occasionPlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="list-event_date">{t('wishlist.eventDate')}</Label>
+                <Input
+                  id="list-event_date"
+                  type="date"
+                  {...listForm.register('event_date')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="list-currency">{t('wishlist.currency')}</Label>
+                <Controller
+                  name="currency"
+                  control={listForm.control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="list-currency" className="font-mono">
+                        <SelectValue placeholder="RUB" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[
+                          ...(wishlist?.currency && !POPULAR_CURRENCIES.includes(wishlist.currency as (typeof POPULAR_CURRENCIES)[number])
+                            ? [wishlist.currency]
+                            : []),
+                          ...POPULAR_CURRENCIES,
+                        ].map((code) => (
+                          <SelectItem key={code} value={code}>
+                            {code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setListEditOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={listForm.formState.isSubmitting}>
+                {t('common.save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -558,62 +570,94 @@ function ItemRow({
   onDelete: () => void
   t: (k: string) => string
 }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasExtra = Boolean(item.link || item.is_reserved || (item.price != null && Number(item.price) > 0 && toNum(item.total_contributed) > 0))
+
   return (
     <Card>
-      <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          {item.image_url && (
-<img
-            src={item.image_url}
-            alt=""
-            className="h-12 w-12 shrink-0 rounded object-cover"
-            loading="lazy"
-          />
+      <CardContent className="flex gap-3 p-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-muted">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt=""
+              className="h-14 w-14 rounded-lg object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <Gift className="size-7 text-muted-foreground" aria-hidden />
           )}
-          <div className="min-w-0">
-            <p className="font-medium">{item.title}</p>
-            {item.link && (
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary underline truncate block"
-              >
-                {item.link}
-              </a>
-            )}
-            {item.price != null && (
-              <p className="text-sm text-muted-foreground">
-                {item.price} {currency}
-              </p>
-            )}
-            {item.price != null && Number(item.price) > 0 && (
-              <div className="mt-1 space-y-0.5">
-                <p className="text-xs text-muted-foreground">
-                  {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {currency}
-                </p>
-                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${Math.min(100, (toNum(item.total_contributed) / toNum(item.price)) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-            {item.is_reserved && (
-              <span className="text-xs text-muted-foreground">{t('wishlist.reserved')}</span>
-            )}
-          </div>
         </div>
-        <div className="flex gap-1">
-          <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-            {t('wishlist.editItem')}
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onDelete}>
-            {t('wishlist.deleteItem')}
-          </Button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              {item.is_reserved && (
+                <span className="text-xs font-medium text-destructive">{t('wishlist.reserved')}</span>
+              )}
+              <p className="font-medium leading-tight">{item.title}</p>
+              {item.price != null && (
+                <p className="text-sm text-primary">
+                  {typeof item.price === 'number' ? item.price.toLocaleString() : item.price} {currency}
+                </p>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={t('wishlist.manage')}>
+                  <MoreVertical className="size-4" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <Pencil className="size-4 shrink-0" aria-hidden />
+                  {t('wishlist.editItem')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                  <Trash2 className="size-4 shrink-0" aria-hidden />
+                  {t('wishlist.deleteItem')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {hasExtra && (
+            <button
+              type="button"
+              className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setExpanded((e) => !e)}
+            >
+              {expanded ? t('wishlist.collapseComment') : t('wishlist.expandComment')}
+              <ChevronDown className={`size-3.5 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+            </button>
+          )}
+          {expanded && hasExtra && (
+            <div className="mt-2 space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+              {item.link && (
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate text-primary underline"
+                >
+                  {item.link}
+                </a>
+              )}
+              {item.price != null && Number(item.price) > 0 && (
+                <div className="space-y-0.5">
+                  <p>
+                    {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {currency}
+                  </p>
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${Math.min(100, (toNum(item.total_contributed) / toNum(item.price)) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
