@@ -10,7 +10,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from app.db.session import engine, init_db
+from app.db.session import async_session, engine, init_db
 from app.main import app
 
 
@@ -36,3 +36,10 @@ async def client():
         base_url="http://test",
     ) as ac:
         yield ac
+
+
+@pytest.fixture
+async def db_session():
+    """Сессия БД для проверки/установки данных в тестах (например, password_reset_token)."""
+    async with async_session() as session:
+        yield session

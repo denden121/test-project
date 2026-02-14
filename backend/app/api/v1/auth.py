@@ -238,7 +238,8 @@ async def forgot_password(
     user = result.scalar_one_or_none()
     if user and user.hashed_password is not None:
         user.password_reset_token = secrets.token_urlsafe(32)
-        user.password_reset_expires = datetime.now(timezone.utc) + RESET_TOKEN_EXPIRE
+        # Naive UTC: column is TIMESTAMP WITHOUT TIME ZONE, asyncpg rejects timezone-aware
+        user.password_reset_expires = (datetime.now(timezone.utc) + RESET_TOKEN_EXPIRE).replace(tzinfo=None)
         await db.flush()
         base = settings.frontend_url.rstrip("/")
         reset_link = f"{base}/reset-password?token={user.password_reset_token}"
@@ -254,10 +255,11 @@ async def reset_password(
     """
     Сбросить пароль по токену из ссылки в письме. Токен действителен 1 час.
     """
+    now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
     result = await db.execute(
         select(User).where(
             User.password_reset_token == data.token,
-            User.password_reset_expires > datetime.now(timezone.utc),
+            User.password_reset_expires > now_utc_naive,
         )
     )
     user = result.scalar_one_or_none()
