@@ -27,6 +27,9 @@ frontend/dist/
 *.log
 npm-debug.log*
 
+# Uploads (avatars)
+backend/uploads/
+
 # Playwright
 frontend/test-results/
 frontend/playwright-report/

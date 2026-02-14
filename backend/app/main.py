@@ -1,10 +1,13 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import auth, contributions, health, items, reservations, wishlists
+from app.core.config import settings
 from app.db.session import init_db
 
 logger = logging.getLogger(__name__)
@@ -35,6 +38,10 @@ async def lifespan(app: FastAPI):
         await init_db()
     except Exception as e:  # init_db can raise DB/network errors
         logger.warning("Database init skipped (unavailable): %s", e)
+    upload_dir = os.path.join(settings.upload_dir, "avatars")
+    os.makedirs(upload_dir, exist_ok=True)
+    if os.path.isdir(settings.upload_dir):
+        app.mount("/api/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
     yield
     # cleanup if needed
 

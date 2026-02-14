@@ -33,6 +33,13 @@ export const authApi = createApi({
     updateMe: builder.mutation<User, UserUpdateRequest>({
       query: (body) => ({ url: 'me', method: 'PATCH', body }),
     }),
+    uploadAvatar: builder.mutation<User, File>({
+      query: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return { url: 'me/avatar', method: 'POST', body: formData }
+      },
+    }),
   }),
 })
 
@@ -42,4 +49,5 @@ export const {
   useLoginWithGoogleMutation,
   useLazyGetMeQuery,
   useUpdateMeMutation,
+  useUploadAvatarMutation,
 } = authApi

@@ -1,5 +1,6 @@
+import os
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -166,6 +167,43 @@ async def update_me(
     """Обновить профиль (фото и т.д.)."""
     if data.avatar_url is not None:
         current_user.avatar_url = data.avatar_url if data.avatar_url.strip() else None
+    await db.flush()
+    await db.refresh(current_user)
+    return UserResponse.model_validate(current_user)
+
+
+ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
+AVATAR_MAX_BYTES = 2 * 1024 * 1024  # 2 MB
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Загрузить фото профиля (JPEG, PNG или WebP, до 2 МБ)."""
+    if file.content_type not in ALLOWED_AVATAR_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Разрешены только JPEG, PNG и WebP",
+        )
+    ext = "jpg" if file.content_type == "image/jpeg" else file.content_type.split("/")[-1]
+    content = await file.read()
+    if len(content) > AVATAR_MAX_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Файл не должен быть больше 2 МБ",
+        )
+    upload_dir = os.path.join(settings.upload_dir, "avatars")
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = f"{current_user.id}.{ext}"
+    path = os.path.join(upload_dir, filename)
+    with open(path, "wb") as f:
+        f.write(content)
+    base = str(request.base_url).rstrip("/")
+    current_user.avatar_url = f"{base}/api/uploads/avatars/{filename}"
     await db.flush()
     await db.refresh(current_user)
     return UserResponse.model_validate(current_user)

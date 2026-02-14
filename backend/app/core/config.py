@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # Google OAuth (optional; if set, "Login with Google" is enabled)
     google_client_id: str | None = Field(default=None, validation_alias="GOOGLE_CLIENT_ID")
     google_client_secret: str | None = Field(default=None, validation_alias="GOOGLE_CLIENT_SECRET")
+    # Папка для загруженных файлов (аватары и т.д.)
+    upload_dir: str = Field(default="uploads", validation_alias="UPLOAD_DIR")
 
     model_config = {"env_file": ".env"}
 
