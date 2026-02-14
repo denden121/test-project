@@ -103,3 +103,15 @@ class WishlistPublicResponse(BaseModel):
 class WishlistManageDetailResponse(WishlistManageResponse):
     """Полный вид для управления — создатель видит items с is_reserved (без имён)."""
     items: list[WishlistItemResponse]
+
+
+class FetchProductRequest(BaseModel):
+    """Запрос на подтягивание данных товара по URL."""
+    url: str = Field(description="Ссылка на страницу товара")
+
+
+class FetchProductResponse(BaseModel):
+    """Название, картинка и цена, извлечённые со страницы (Open Graph, schema.org)."""
+    title: str | None = None
+    image_url: str | None = None
+    price: Decimal | None = None

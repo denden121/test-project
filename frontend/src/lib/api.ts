@@ -69,3 +69,9 @@ export type ReservationResponse = {
   reserved_at: string
   item_title: string | null
 }
+
+export type FetchProductResponse = {
+  title: string | null
+  image_url: string | null
+  price: number | string | null
+}

@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
 
@@ -338,3 +340,71 @@ async def test_creator_sees_is_reserved_without_name(client: AsyncClient):
     assert len(items) == 1
     assert items[0]["is_reserved"] is True
     assert "reserver_name" not in items[0]
+
+
+# --- Автозаполнение по URL (fetch-product) ---
+
+
+@pytest.mark.asyncio
+async def test_fetch_product_success(client: AsyncClient):
+    """POST /fetch-product возвращает title, image_url, price при успешном парсинге."""
+    with patch("app.api.v1.wishlists.fetch_product", new_callable=AsyncMock) as m:
+        m.return_value = {
+            "title": "Товар из магазина",
+            "image_url": "https://example.com/photo.jpg",
+            "price": 1999.99,
+        }
+        r = await client.post(
+            "/api/wishlists/fetch-product",
+            json={"url": "https://shop.example.com/product/123"},
+        )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["title"] == "Товар из магазина"
+    assert data["image_url"] == "https://example.com/photo.jpg"
+    assert float(data["price"]) == 1999.99
+    m.assert_called_once_with("https://shop.example.com/product/123")
+
+
+@pytest.mark.asyncio
+async def test_fetch_product_partial(client: AsyncClient):
+    """POST /fetch-product может вернуть только часть полей (null для остальных)."""
+    with patch("app.api.v1.wishlists.fetch_product", new_callable=AsyncMock) as m:
+        m.return_value = {"title": "Только название", "image_url": None, "price": None}
+        r = await client.post(
+            "/api/wishlists/fetch-product",
+            json={"url": "https://example.com/page"},
+        )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["title"] == "Только название"
+    assert data["image_url"] is None
+    assert data["price"] is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_product_invalid_url_400(client: AsyncClient):
+    """При недопустимом URL (ValueError в fetch_product) — 400."""
+    with patch("app.api.v1.wishlists.fetch_product", new_callable=AsyncMock) as m:
+        m.side_effect = ValueError("Допустимы только http и https")
+        r = await client.post(
+            "/api/wishlists/fetch-product",
+            json={"url": "ftp://files.example.com/product"},
+        )
+    assert r.status_code == 400
+    assert "http" in r.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_product_http_error_502(client: AsyncClient):
+    """При ошибке загрузки страницы (httpx.HTTPError) — 502."""
+    import httpx
+
+    with patch("app.api.v1.wishlists.fetch_product", new_callable=AsyncMock) as m:
+        m.side_effect = httpx.ConnectError("Connection refused")
+        r = await client.post(
+            "/api/wishlists/fetch-product",
+            json={"url": "https://down.example.com/page"},
+        )
+    assert r.status_code == 502
+    assert "загрузить" in r.json()["detail"]

@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,8 @@ from app.models import Contribution, Reservation, User, Wishlist, WishlistItem
 from app.schemas import (
     ContributionCreate,
     ContributionCreatedResponse,
+    FetchProductRequest,
+    FetchProductResponse,
     ReservationCreate,
     ReservationCreatedResponse,
     WishlistCreate,
@@ -21,6 +24,7 @@ from app.schemas import (
     WishlistResponse,
     WishlistUpdate,
 )
+from app.services.fetch_product import fetch_product
 from app.services.websocket import ws_manager
 from app.services.wishlist import (
     _total_contributed,
@@ -83,6 +87,29 @@ async def get_my_wishlists(
         )
         for w in wishlists
     ]
+
+
+# --- Автозаполнение товара по URL ---
+@router.post("/fetch-product", response_model=FetchProductResponse)
+async def fetch_product_endpoint(data: FetchProductRequest):
+    """
+    Подтянуть название, картинку и цену по ссылке на страницу товара.
+    Используются Open Graph (og:title, og:image, og:price:amount) и schema.org Product (JSON-LD).
+    """
+    try:
+        result = await fetch_product(data.url)
+        return FetchProductResponse(
+            title=result.get("title"),
+            image_url=result.get("image_url"),
+            price=result.get("price"),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Не удалось загрузить страницу: {e!s}",
+        )
 
 
 # --- WebSocket для реалтайм-обновлений ---

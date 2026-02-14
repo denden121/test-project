@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useI18n } from '@/contexts/i18n-context'
-import { API_URL, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
+import { API_URL, type FetchProductResponse, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
 import { removeStoredWishlist, updateStoredWishlistTitle } from '@/lib/wishlist-storage'
 
 function toNum(v: number | string | null | undefined): number {
@@ -67,9 +67,12 @@ export function ManageWishlist() {
   const [shareSuccess, setShareSuccess] = useState(false)
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator
 
-  const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm<ItemFormValues>({
+  const { register, handleSubmit, reset, setValue, getValues, watch, formState: { isSubmitting } } = useForm<ItemFormValues>({
     defaultValues: { title: '', link: '', price: '', min_contribution: '', image_url: '' },
   })
+  const [fetchProductLoading, setFetchProductLoading] = useState(false)
+  const [fetchProductError, setFetchProductError] = useState<string | null>(null)
+  const linkValue = watch('link')
 
   const listForm = useForm<ListFormValues>({
     defaultValues: { title: '', occasion: '', event_date: '', currency: 'RUB' },
@@ -149,12 +152,34 @@ export function ManageWishlist() {
 
   const openModalForCreate = () => {
     setEditingItem(null)
+    setFetchProductError(null)
     reset({ title: '', link: '', price: '', min_contribution: '', image_url: '' })
     setModalOpen(true)
   }
 
+  const fetchProductByUrl = async () => {
+    const link = getValues('link')?.trim()
+    if (!link) {
+      setFetchProductError(t('wishlist.fetchByUrlNoLink'))
+      return
+    }
+    setFetchProductError(null)
+    setFetchProductLoading(true)
+    try {
+      const { data } = await axios.post<FetchProductResponse>(`${API_URL}/wishlists/fetch-product`, { url: link })
+      if (data.title != null) setValue('title', data.title)
+      if (data.image_url != null) setValue('image_url', data.image_url)
+      if (data.price != null) setValue('price', String(data.price))
+    } catch (e: unknown) {
+      setFetchProductError(axios.isAxiosError(e) ? String(e.response?.data?.detail ?? e.message) : t('wishlist.fetchByUrlError'))
+    } finally {
+      setFetchProductLoading(false)
+    }
+  }
+
   const openModalForEdit = (item: WishlistItemResponse) => {
     setEditingItem(item)
+    setFetchProductError(null)
     setValue('title', item.title)
     setValue('link', item.link ?? '')
     setValue('price', item.price != null ? String(item.price) : '')
@@ -348,14 +373,28 @@ export function ManageWishlist() {
                   placeholder={t('wishlist.itemTitle')}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="modal-link">{t('wishlist.itemLink')}</Label>
-                <Input
-                  id="modal-link"
-                  {...register('link')}
-                  type="url"
-                  placeholder="https://..."
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="modal-link"
+                    {...register('link')}
+                    type="url"
+                    placeholder="https://..."
+                    className="flex-1 min-w-0"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={fetchProductByUrl}
+                    disabled={fetchProductLoading || !(linkValue ?? '')?.trim()}
+                  >
+                    {fetchProductLoading ? t('wishlist.fetchByUrlLoading') : t('wishlist.fetchByUrl')}
+                  </Button>
+                </div>
+                {fetchProductError && (
+                  <p className="text-sm text-destructive">{fetchProductError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="modal-price">{t('wishlist.itemPrice')}</Label>

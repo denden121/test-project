@@ -16,6 +16,8 @@ from app.schemas.reservation import (
     ReservationResponse,
 )
 from app.schemas.wishlist import (
+    FetchProductRequest,
+    FetchProductResponse,
     WishlistCreate,
     WishlistItemCreate,
     WishlistItemResponse,
@@ -40,6 +42,8 @@ __all__ = [
     "Token",
     "UserCreate",
     "UserResponse",
+    "FetchProductRequest",
+    "FetchProductResponse",
     "WishlistCreate",
     "WishlistItemCreate",
     "WishlistItemResponse",
