@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, BrowserRouter, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
+import { DashboardSkeleton } from '@/components/dashboard-skeleton'
 import { useAuth } from '@/hooks/use-auth'
 
 const Landing = lazy(() => import('@/pages/landing').then((m) => ({ default: m.Landing })))
@@ -18,7 +19,7 @@ const ResetPasswordPage = lazy(() => import('@/pages/reset-password-page').then(
 
 function HomeOrDashboard() {
   const { token, loading } = useAuth()
-  if (loading) return <p className="text-muted-foreground">...</p>
+  if (loading) return <DashboardSkeleton />
   return token ? <Dashboard /> : <Landing />
 }
 
@@ -32,7 +33,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<p className="flex min-h-svh items-center justify-center text-muted-foreground">...</p>}>
+      <Suspense fallback={<div className="mx-auto max-w-4xl px-4 py-6 pb-32 md:pb-6"><DashboardSkeleton /></div>}>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomeOrDashboard />} />
