@@ -1,6 +1,7 @@
 {
   "name": "test-project",
   "private": true,
+  "type": "module",
   "description": "Root for scripts (Sonar, etc.)",
   "scripts": {
     "sonar": "node scripts/sonar.js"

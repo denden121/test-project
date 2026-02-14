@@ -14,6 +14,23 @@ test.describe('Auth', () => {
     await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
   })
 
+  test('T1.1.2 Регистрация с уже занятым email', async ({ page, request }) => {
+    const apiBase = process.env.API_URL || 'http://localhost:8000'
+    await request.post(`${apiBase}/api/auth/register`, {
+      data: { email: 'dup-e2e@example.com', password: 'password123' },
+    })
+
+    await page.goto('/login')
+    await page.getByRole('button', { name: 'Регистрация' }).click()
+    await page.locator('#register-email').fill('dup-e2e@example.com')
+    await page.locator('#register-password').fill('password123')
+    await page.locator('#register-password-confirm').fill('password123')
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
+
+    await expect(page).toHaveURL(/\/login/)
+    await expect(page.getByText(/already registered|Email уже|занят/i)).toBeVisible()
+  })
+
   test('T1.1.3 Регистрация с невалидным email', async ({ page }) => {
     await page.goto('/login')
     await page.getByRole('button', { name: 'Регистрация' }).click()
@@ -24,6 +41,18 @@ test.describe('Auth', () => {
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
 
     await expect(page.getByText(/Некорректный email|Invalid email/i)).toBeVisible()
+    await expect(page).toHaveURL(/\/login/)
+  })
+
+  test('T1.1.4 Регистрация со слабым паролем', async ({ page }) => {
+    await page.goto('/login')
+    await page.getByRole('button', { name: 'Регистрация' }).click()
+    await page.locator('#register-email').fill('weak@example.com')
+    await page.locator('#register-password').fill('123')
+    await page.locator('#register-password-confirm').fill('123')
+    await page.getByRole('button', { name: 'Зарегистрироваться' }).click()
+
+    await expect(page.getByText(/Пароль не менее|at least 8/i)).toBeVisible()
     await expect(page).toHaveURL(/\/login/)
   })
 
@@ -59,6 +88,16 @@ test.describe('Auth', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
+  test('T1.2.3 Несуществующий email', async ({ page }) => {
+    await page.goto('/login')
+    await page.locator('#login-email').fill('nonexistent@example.com')
+    await page.locator('#login-password').fill('anypassword1')
+    await page.getByRole('button', { name: 'Войти' }).click()
+
+    await expect(page.locator('.text-destructive')).toBeVisible()
+    await expect(page).toHaveURL(/\/login/)
+  })
+
   test('T1.2.4 Выход', async ({ page, request }) => {
     const email = `logout-${Date.now()}@example.com`
     const apiBase = process.env.API_URL || 'http://localhost:8000'
@@ -74,7 +113,15 @@ test.describe('Auth', () => {
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Мои списки', level: 1 })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Выйти' }).click()
+    // На десктопе «Выйти» в выпадающем меню профиля; на мобильном — кнопка в bottom nav
+    const logoutButton = page.getByRole('button', { name: 'Выйти' })
+    const logoutMenuitem = page.getByRole('menuitem', { name: 'Выйти' })
+    if (await logoutButton.isVisible()) {
+      await logoutButton.click()
+    } else {
+      await page.getByRole('button', { name: /Профиль|Profile/ }).click()
+      await logoutMenuitem.click()
+    }
     await expect(page).toHaveURL(/\/$/)
     await expect(page.getByRole('link', { name: 'Войти' }).first()).toBeVisible()
   })

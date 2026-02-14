@@ -408,3 +408,52 @@ async def test_fetch_product_http_error_502(client: AsyncClient):
         )
     assert r.status_code == 502
     assert "загрузить" in r.json()["detail"]
+
+
+# --- После удаления товара: резервация/вклад не найдены (T3.3.2, T3.3.3) ---
+
+
+@pytest.mark.asyncio
+async def test_after_delete_item_reservation_returns_404(client: AsyncClient):
+    """После удаления зарезервированного товара страница резервации — 404 (T3.3.2)."""
+    create_r = await client.post("/api/wishlists", json={"title": "Список"})
+    slug = create_r.json()["slug"]
+    creator_secret = create_r.json()["creator_secret"]
+    add_r = await client.post(
+        f"/api/wishlists/m/{creator_secret}/items",
+        json={"title": "Подарок"},
+    )
+    item_id = add_r.json()["id"]
+    reserve_r = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/reserve",
+        json={"reserver_name": "Маша"},
+    )
+    reserver_secret = reserve_r.json()["reserver_secret"]
+
+    await client.delete(f"/api/wishlists/m/{creator_secret}/items/{item_id}")
+    r = await client.get(f"/api/reservations/{reserver_secret}")
+    assert r.status_code == 404
+    assert "Резервация не найдена" in r.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_after_delete_item_contribution_returns_404(client: AsyncClient):
+    """После удаления товара с вкладами страница вклада — 404 (T3.3.3)."""
+    create_r = await client.post("/api/wishlists", json={"title": "Список"})
+    slug = create_r.json()["slug"]
+    creator_secret = create_r.json()["creator_secret"]
+    add_r = await client.post(
+        f"/api/wishlists/m/{creator_secret}/items",
+        json={"title": "Подарок", "price": 1000},
+    )
+    item_id = add_r.json()["id"]
+    contrib_r = await client.post(
+        f"/api/wishlists/s/{slug}/items/{item_id}/contribute",
+        json={"contributor_name": "Маша", "amount": 500},
+    )
+    contributor_secret = contrib_r.json()["contributor_secret"]
+
+    await client.delete(f"/api/wishlists/m/{creator_secret}/items/{item_id}")
+    r = await client.get(f"/api/contributions/{contributor_secret}")
+    assert r.status_code == 404
+    assert "Вклад не найден" in r.json()["detail"]

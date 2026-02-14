@@ -164,6 +164,7 @@
 ## 6. Связь с документацией проекта
 
 - **Тест-сценарии:** [docs/TEST_SCENARIOS.md](./TEST_SCENARIOS.md) и папка [docs/test-scenarios/](./test-scenarios/) — детальные сценарии по фичам (auth, wishlists, items, sharing, reservations, contributions, realtime, edge cases).
+- **Покрытие тестами:** [docs/TEST_COVERAGE.md](./TEST_COVERAGE.md) — соответствие сценариям из test-scenarios и реализованным E2E/API-тестам, пробелы и приоритеты.
 - **README:** [README.md](../README.md) — запуск, деплой, стек.
 
 ---
