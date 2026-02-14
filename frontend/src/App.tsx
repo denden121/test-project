@@ -1,18 +1,20 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, BrowserRouter, Routes } from 'react-router-dom'
 import { Layout } from '@/components/layout'
-import { Landing } from '@/pages/landing'
-import { LoginPage } from '@/pages/login-page'
-import { AuthCallbackPage } from '@/pages/auth-callback-page'
-import { Dashboard } from '@/pages/dashboard'
-import { CreateWishlist } from '@/pages/create-wishlist'
-import { ManageWishlist } from '@/pages/manage-wishlist'
-import { PublicWishlist } from '@/pages/public-wishlist'
-import { MyReservation } from '@/pages/my-reservation'
-import { MyContribution } from '@/pages/my-contribution'
-import { Profile } from '@/pages/profile'
-import { ForgotPasswordPage } from '@/pages/forgot-password-page'
-import { ResetPasswordPage } from '@/pages/reset-password-page'
 import { useAuth } from '@/hooks/use-auth'
+
+const Landing = lazy(() => import('@/pages/landing').then((m) => ({ default: m.Landing })))
+const LoginPage = lazy(() => import('@/pages/login-page').then((m) => ({ default: m.LoginPage })))
+const AuthCallbackPage = lazy(() => import('@/pages/auth-callback-page').then((m) => ({ default: m.AuthCallbackPage })))
+const Dashboard = lazy(() => import('@/pages/dashboard').then((m) => ({ default: m.Dashboard })))
+const CreateWishlist = lazy(() => import('@/pages/create-wishlist').then((m) => ({ default: m.CreateWishlist })))
+const ManageWishlist = lazy(() => import('@/pages/manage-wishlist').then((m) => ({ default: m.ManageWishlist })))
+const PublicWishlist = lazy(() => import('@/pages/public-wishlist').then((m) => ({ default: m.PublicWishlist })))
+const MyReservation = lazy(() => import('@/pages/my-reservation').then((m) => ({ default: m.MyReservation })))
+const MyContribution = lazy(() => import('@/pages/my-contribution').then((m) => ({ default: m.MyContribution })))
+const Profile = lazy(() => import('@/pages/profile').then((m) => ({ default: m.Profile })))
+const ForgotPasswordPage = lazy(() => import('@/pages/forgot-password-page').then((m) => ({ default: m.ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('@/pages/reset-password-page').then((m) => ({ default: m.ResetPasswordPage })))
 
 function HomeOrDashboard() {
   const { token, loading } = useAuth()
@@ -30,6 +32,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<p className="flex min-h-svh items-center justify-center text-muted-foreground">...</p>}>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomeOrDashboard />} />
@@ -60,6 +63,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
