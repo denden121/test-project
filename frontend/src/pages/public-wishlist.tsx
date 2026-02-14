@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/contexts/i18n-context'
 import {
@@ -134,7 +135,31 @@ export function PublicWishlist() {
     return typeof v === 'string' ? parseFloat(v) || 0 : v
   }
 
-  if (loading) return <p className="text-muted-foreground">{t('common.loading')}</p>
+  if (loading) {
+    return (
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-5 w-full max-w-md" />
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <li key={i}>
+              <Card>
+                <Skeleton className="aspect-video w-full rounded-t-lg" />
+                <CardHeader className="space-y-2">
+                  <Skeleton className="h-5 w-[80%]" />
+                  <Skeleton className="h-4 w-1/3" />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-11 w-24" />
+                  <Skeleton className="h-11 w-20" />
+                </CardContent>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
   if (error && !wishlist) return <p className="text-destructive">{t('common.error')}: {error}</p>
   if (!wishlist) return <p className="text-muted-foreground">{t('common.notFound')}</p>
 
@@ -210,11 +235,12 @@ export function PublicWishlist() {
             <Card>
               {item.image_url && (
                 <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                  <img
-                    src={item.image_url}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
+<img
+                  src={item.image_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
                 </div>
               )}
               <CardHeader>
@@ -293,6 +319,7 @@ export function PublicWishlist() {
                     <Input
                       id={`contributor-amount-${item.id}`}
                       type="number"
+                      inputMode="decimal"
                       step="0.01"
                       min={toNum(item.min_contribution) || 0.01}
                       max={toNum(item.price) - toNum(item.total_contributed)}

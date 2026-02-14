@@ -9,6 +9,7 @@ import { ManageWishlist } from '@/pages/manage-wishlist'
 import { PublicWishlist } from '@/pages/public-wishlist'
 import { MyReservation } from '@/pages/my-reservation'
 import { MyContribution } from '@/pages/my-contribution'
+import { Profile } from '@/pages/profile'
 import { useAuth } from '@/hooks/use-auth'
 
 function HomeOrDashboard() {
@@ -37,6 +38,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <CreateWishlist />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <RequireAuth>
+                <Profile />
               </RequireAuth>
             }
           />

@@ -1,5 +1,26 @@
 @import 'tailwindcss';
 
+/* Mobile-first: 8pt grid, zoom-friendly (rem), focus visible */
+@layer base {
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  /* Чёткая обводка фокуса для клавиатуры и скринридеров (a11y) */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [role='button']:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
 /* Светлая тема (по умолчанию) */
 @theme inline {
   --color-background: oklch(1 0 0);
@@ -70,3 +91,5 @@
     cursor: pointer;
   }
 }
+
+/* 8pt grid spacing (8, 16, 24, 32, 48 px) — используйте gap-2 gap-4 gap-6 gap-8 gap-12, p-2 p-4 и т.д. */

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/contexts/i18n-context'
 import { API_URL, type FetchProductResponse, type WishlistManageDetailResponse, type WishlistItemResponse, type WishlistManageResponse } from '@/lib/api'
 import { removeStoredWishlist, updateStoredWishlistTitle } from '@/lib/wishlist-storage'
@@ -249,7 +251,36 @@ export function ManageWishlist() {
     }
   }
 
-  if (loading) return <p className="text-muted-foreground">{t('common.loading')}</p>
+  if (loading) {
+    return (
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <div className="flex items-center justify-between gap-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-11 w-24" />
+        </div>
+        <Card>
+          <CardHeader className="space-y-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-full" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-11 w-24" />
+          </CardContent>
+        </Card>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-11 w-28" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      </div>
+    )
+  }
   if (error && !wishlist) return <p className="text-destructive">{t('common.error')}: {error}</p>
   if (!wishlist) return <p className="text-muted-foreground">{t('common.notFound')}</p>
 
@@ -350,8 +381,21 @@ export function ManageWishlist() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{t('wishlist.manage')}</h2>
-        <Button onClick={openModalForCreate}>{t('wishlist.addItem')}</Button>
+        <Button onClick={openModalForCreate} className="md:inline-flex hidden">
+          {t('wishlist.addItem')}
+        </Button>
       </div>
+
+      {/* FAB: основное действие в зоне большого пальца на мобильных */}
+      <Button
+        type="button"
+        size="icon"
+        onClick={openModalForCreate}
+        className="fixed bottom-20 right-4 z-10 shadow-lg md:hidden pb-[env(safe-area-inset-bottom)]"
+        aria-label={t('wishlist.addItem')}
+      >
+        <Plus className="size-6" aria-hidden />
+      </Button>
 
       <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
         <DialogContent>
@@ -402,6 +446,7 @@ export function ManageWishlist() {
                   id="modal-price"
                   {...register('price')}
                   type="number"
+                  inputMode="decimal"
                   step="0.01"
                   placeholder="0"
                 />
@@ -412,6 +457,7 @@ export function ManageWishlist() {
                   id="modal-min-contribution"
                   {...register('min_contribution')}
                   type="number"
+                  inputMode="decimal"
                   step="0.01"
                   min="0"
                   placeholder={t('wishlist.minContributionPlaceholder')}
@@ -489,11 +535,12 @@ function ItemRow({
       <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {item.image_url && (
-            <img
-              src={item.image_url}
-              alt=""
-              className="h-12 w-12 shrink-0 rounded object-cover"
-            />
+<img
+            src={item.image_url}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded object-cover"
+            loading="lazy"
+          />
           )}
           <div className="min-w-0">
             <p className="font-medium">{item.title}</p>

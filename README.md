@@ -13,9 +13,12 @@
 ```
 ├── frontend/          # React (Vite) + TypeScript
 ├── backend/           # FastAPI + SQLAlchemy (async) + PostgreSQL
+├── docs/              # документация (требования, сценарии, гайдлайны)
 ├── vercel.json        # конфиг деплоя фронта на Vercel
 └── README.md
 ```
+
+**Документация:** [Требования к продукту](docs/PRODUCT_REQUIREMENTS.md), [тест-сценарии](docs/TEST_SCENARIOS.md), [лучшие практики для мобильных интерфейсов](docs/MOBILE_UI_BEST_PRACTICES.md).
 
 ## Локальный запуск
 
