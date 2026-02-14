@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class ReservationCreate(BaseModel):
     reserver_name: str = Field(
+        max_length=200,
         description="Ваше имя (видно только вам при просмотре резервации)",
         examples=["Маша"],
     )

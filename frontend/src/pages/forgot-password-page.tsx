@@ -87,6 +87,7 @@ export function ForgotPasswordPage() {
                 autoComplete="email"
                 placeholder="you@example.com"
                 className="w-full"
+                maxLength={200}
                 {...register('email', {
                   required: true,
                   pattern: {

@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 
 class WishlistCreate(BaseModel):
-    title: str = Field(description="Название списка", examples=["День рождения Маши"])
-    occasion: str | None = Field(None, description="Повод", examples=["День рождения", "Новый год"])
+    title: str = Field(max_length=200, description="Название списка", examples=["День рождения Маши"])
+    occasion: str | None = Field(None, max_length=200, description="Повод", examples=["День рождения", "Новый год"])
     event_date: date | None = Field(None, description="Дата события")
     currency: str = Field(default="RUB", min_length=1, max_length=3, description="Валюта: RUB, USD, EUR, ...")
 
@@ -19,8 +19,8 @@ class WishlistCreate(BaseModel):
 
 class WishlistUpdate(BaseModel):
     """Частичное обновление списка — все поля опциональны."""
-    title: str | None = None
-    occasion: str | None = None
+    title: str | None = Field(None, max_length=200)
+    occasion: str | None = Field(None, max_length=200)
     event_date: date | None = None
     currency: str | None = None
 
@@ -44,7 +44,7 @@ class WishlistManageResponse(WishlistResponse):
 
 
 class WishlistItemCreate(BaseModel):
-    title: str = Field(description="Название товара")
+    title: str = Field(max_length=200, description="Название товара")
     link: str | None = Field(None, description="Ссылка на товар")
     price: Decimal | None = Field(None, description="Цена")
     min_contribution: Decimal | None = Field(None, ge=0, description="Минимальный вклад (опционально)")
@@ -65,7 +65,7 @@ class WishlistItemCreate(BaseModel):
 
 
 class WishlistItemUpdate(BaseModel):
-    title: str | None = None
+    title: str | None = Field(None, max_length=200)
     link: str | None = None
     price: Decimal | None = None
     min_contribution: Decimal | None = None

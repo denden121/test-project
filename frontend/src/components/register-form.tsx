@@ -79,6 +79,7 @@ export function RegisterForm() {
               autoComplete="email"
               placeholder="you@example.com"
               className="w-full"
+              maxLength={200}
               {...register('email', {
                 required: true,
                 pattern: {
@@ -102,6 +103,7 @@ export function RegisterForm() {
               type="password"
               autoComplete="new-password"
               className="w-full"
+              maxLength={200}
               {...register('password', {
                 required: true,
                 minLength: {
@@ -130,6 +132,7 @@ export function RegisterForm() {
               type="password"
               autoComplete="new-password"
               className="w-full"
+              maxLength={200}
               {...register('passwordConfirm', {
                 required: true,
                 minLength: {

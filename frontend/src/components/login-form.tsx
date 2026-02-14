@@ -75,6 +75,7 @@ export function LoginForm() {
               autoComplete="email"
               placeholder="you@example.com"
               className="w-full"
+              maxLength={200}
               {...register('email', {
                 required: true,
                 pattern: {
@@ -98,6 +99,7 @@ export function LoginForm() {
               type="password"
               autoComplete="current-password"
               className="w-full"
+              maxLength={200}
               {...register('password', { required: true })}
             />
             {errors.password && (

@@ -287,6 +287,7 @@ export function PublicWishlist() {
                     <Label htmlFor={`reserver-${item.id}`}>{t('wishlist.reserveName')}</Label>
                     <Input
                       id={`reserver-${item.id}`}
+                      maxLength={200}
                       {...reserveForm.register('reserver_name', { required: true })}
                       placeholder={t('wishlist.reserveNamePlaceholder')}
                       autoFocus
@@ -312,6 +313,7 @@ export function PublicWishlist() {
                     <Label htmlFor={`contributor-name-${item.id}`}>{t('wishlist.chipInName')}</Label>
                     <Input
                       id={`contributor-name-${item.id}`}
+                      maxLength={200}
                       {...contributeForm.register('contributor_name', { required: true })}
                       placeholder={t('wishlist.chipInNamePlaceholder')}
                     />

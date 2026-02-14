@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class ContributionCreate(BaseModel):
-    contributor_name: str = Field(description="Ваше имя (видно только вам)")
+    contributor_name: str = Field(max_length=200, description="Ваше имя (видно только вам)")
     amount: Decimal = Field(gt=0, description="Сумма вклада")
 
     model_config = {"json_schema_extra": {"examples": [{"contributor_name": "Маша", "amount": 50}]}}

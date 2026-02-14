@@ -329,6 +329,7 @@ export function ManageWishlist() {
               <Label htmlFor="list-title">{t('wishlist.listTitle')}</Label>
               <Input
                 id="list-title"
+                maxLength={200}
                 {...listForm.register('title', { required: true })}
                 placeholder={t('wishlist.listTitlePlaceholder')}
               />
@@ -337,6 +338,7 @@ export function ManageWishlist() {
               <Label htmlFor="list-occasion">{t('wishlist.occasion')}</Label>
               <Input
                 id="list-occasion"
+                maxLength={200}
                 {...listForm.register('occasion')}
                 placeholder={t('wishlist.occasionPlaceholder')}
               />
@@ -438,6 +440,7 @@ export function ManageWishlist() {
                 <Label htmlFor="modal-title">{t('wishlist.itemTitle')}</Label>
                 <Input
                   id="modal-title"
+                  maxLength={200}
                   {...register('title', { required: true })}
                   placeholder={t('wishlist.itemTitle')}
                 />

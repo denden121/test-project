@@ -14,7 +14,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-20 flex border-t border-border bg-background/95 backdrop-blur md:hidden pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 z-20 flex border-t border-border bg-background/95 backdrop-blur md:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       aria-label={t('nav.main')}
     >
       {token ? (

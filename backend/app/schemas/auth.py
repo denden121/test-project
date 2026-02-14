@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, max_length=200)
 
     model_config = {"json_schema_extra": {"examples": [{"email": "user@example.com", "password": "secret123"}]}}
 
@@ -55,7 +55,7 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     """Сброс пароля по токену из письма."""
     token: str = Field(description="Токен из ссылки в письме")
-    new_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8, max_length=200)
 
     model_config = {"json_schema_extra": {"examples": [{"token": "...", "new_password": "newsecret123"}]}}
 

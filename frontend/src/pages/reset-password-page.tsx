@@ -109,6 +109,7 @@ export function ResetPasswordPage() {
                 type="password"
                 autoComplete="new-password"
                 className="w-full"
+                maxLength={200}
                 {...register('new_password', {
                   required: true,
                   minLength: {
@@ -137,6 +138,7 @@ export function ResetPasswordPage() {
                 type="password"
                 autoComplete="new-password"
                 className="w-full"
+                maxLength={200}
                 {...register('password_confirm', {
                   required: true,
                   validate: (value) =>

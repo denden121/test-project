@@ -58,6 +58,7 @@ export function CreateWishlist() {
               <Label htmlFor="title">{t('wishlist.listTitle')}</Label>
               <Input
                 id="title"
+                maxLength={200}
                 {...register('title', { required: true })}
                 placeholder={t('wishlist.listTitlePlaceholder')}
               />
@@ -69,6 +70,7 @@ export function CreateWishlist() {
               <Label htmlFor="occasion">{t('wishlist.occasion')}</Label>
               <Input
                 id="occasion"
+                maxLength={200}
                 {...register('occasion')}
                 placeholder={t('wishlist.occasionPlaceholder')}
               />
