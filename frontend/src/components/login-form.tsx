@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import {
@@ -103,6 +103,14 @@ export function LoginForm() {
             {errors.password && (
               <p className="text-sm text-destructive">{t('auth.fieldRequired')}</p>
             )}
+            <p className="text-right text-sm">
+              <Link
+                to="/forgot-password"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                {t('auth.forgotPassword')}
+              </Link>
+            </p>
           </div>
         </CardContent>
         <CardFooter>

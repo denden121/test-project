@@ -10,6 +10,8 @@ import { PublicWishlist } from '@/pages/public-wishlist'
 import { MyReservation } from '@/pages/my-reservation'
 import { MyContribution } from '@/pages/my-contribution'
 import { Profile } from '@/pages/profile'
+import { ForgotPasswordPage } from '@/pages/forgot-password-page'
+import { ResetPasswordPage } from '@/pages/reset-password-page'
 import { useAuth } from '@/hooks/use-auth'
 
 function HomeOrDashboard() {
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<HomeOrDashboard />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="auth/callback" element={<AuthCallbackPage />} />
           <Route
             path="wishlists/new"

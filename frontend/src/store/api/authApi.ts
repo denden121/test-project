@@ -6,6 +6,8 @@ type LoginRequest = { email: string; password: string }
 type LoginResponse = { access_token: string; user: User }
 type GoogleLoginRequest = { code: string; redirect_uri: string }
 type UserUpdateRequest = { avatar_url?: string | null }
+type ForgotPasswordRequest = { email: string }
+type ResetPasswordRequest = { token: string; new_password: string }
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -40,6 +42,12 @@ export const authApi = createApi({
         return { url: 'me/avatar', method: 'POST', body: formData }
       },
     }),
+    forgotPassword: builder.mutation<{ detail: string }, ForgotPasswordRequest>({
+      query: (body) => ({ url: 'forgot-password', method: 'POST', body }),
+    }),
+    resetPassword: builder.mutation<{ detail: string }, ResetPasswordRequest>({
+      query: (body) => ({ url: 'reset-password', method: 'POST', body }),
+    }),
   }),
 })
 
@@ -50,4 +58,6 @@ export const {
   useLazyGetMeQuery,
   useUpdateMeMutation,
   useUploadAvatarMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = authApi
