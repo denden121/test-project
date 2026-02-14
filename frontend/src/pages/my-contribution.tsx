@@ -13,13 +13,18 @@ export function MyContribution() {
   const [contribution, setContribution] = useState<ContributionResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [errorStatus, setErrorStatus] = useState<number | null>(null)
 
   useEffect(() => {
     if (!contributorSecret) return
+    setErrorStatus(null)
     axios
       .get<ContributionResponse>(`${API_URL}/contributions/${contributorSecret}`)
       .then((r) => setContribution(r.data))
-      .catch((e) => setError(e.response?.data?.detail ?? e.message))
+      .catch((e) => {
+        setError(axios.isAxiosError(e) ? e.response?.data?.detail ?? e.message : String(e))
+        setErrorStatus(axios.isAxiosError(e) ? e.response?.status ?? null : null)
+      })
       .finally(() => setLoading(false))
   }, [contributorSecret])
 
@@ -35,7 +40,18 @@ export function MyContribution() {
   }
 
   if (loading) return <p className="text-muted-foreground">{t('common.loading')}</p>
-  if (error && !contribution) return <p className="text-destructive">{t('common.error')}: {error}</p>
+  if (error && !contribution) {
+    const is404 = errorStatus === 404
+    const message = is404 ? t('wishlist.contributionNotFoundOrRemoved') : `${t('common.error')}: ${error}`
+    return (
+      <div className="mx-auto max-w-md space-y-4">
+        <p className={is404 ? 'text-muted-foreground' : 'text-destructive'}>{message}</p>
+        <Button variant="outline" asChild>
+          <Link to="/">{t('common.back')}</Link>
+        </Button>
+      </div>
+    )
+  }
   if (!contribution) return <p className="text-muted-foreground">{t('common.notFound')}</p>
 
   const amount = typeof contribution.amount === 'string' ? parseFloat(contribution.amount) : contribution.amount

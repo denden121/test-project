@@ -230,8 +230,9 @@ export function ManageWishlist() {
     }
   }
 
-  const onDeleteItem = async (itemId: number) => {
-    if (!creatorSecret || !confirm(t('wishlist.deleteItemConfirm'))) return
+  const onDeleteItem = async (itemId: number, hasContributions = false) => {
+    const msg = hasContributions ? t('wishlist.deleteItemWithContributionsConfirm') : t('wishlist.deleteItemConfirm')
+    if (!creatorSecret || !confirm(msg)) return
     try {
       await axios.delete(`${API_URL}/wishlists/m/${creatorSecret}/items/${itemId}`)
       setWishlist((w) => (w ? { ...w, items: w.items.filter((i) => i.id !== itemId) } : null))
@@ -492,7 +493,7 @@ export function ManageWishlist() {
               item={item}
               currency={wishlist.currency ?? 'RUB'}
               onEdit={() => openModalForEdit(item)}
-              onDelete={() => onDeleteItem(item.id)}
+              onDelete={() => onDeleteItem(item.id, toNum(item.total_contributed) > 0)}
               t={t}
             />
           </li>
