@@ -1,8 +1,6 @@
 import { Link, Outlet } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/bottom-nav'
-import { LanguageSwitcher } from '@/components/language-switcher'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from '@/components/user-menu'
 import { useAuth } from '@/hooks/use-auth'
 import { useI18n } from '@/contexts/i18n-context'
@@ -37,8 +35,6 @@ export function Layout() {
                 <Link to="/login">{t('auth.login')}</Link>
               </Button>
             )}
-            <LanguageSwitcher />
-            <ThemeToggle />
           </nav>
         </div>
       </header>

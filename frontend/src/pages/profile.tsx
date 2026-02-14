@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { useAuth } from '@/hooks/use-auth'
 import { useI18n } from '@/contexts/i18n-context'
 import { useUpdateMeMutation, useUploadAvatarMutation } from '@/store/api/authApi'
@@ -133,9 +135,19 @@ export function Profile() {
             <p className="text-sm font-medium text-muted-foreground">{t('auth.email')}</p>
             <p className="text-foreground">{user?.email ?? '—'}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout} className="w-full sm:w-auto">
-            {t('auth.logout')}
-          </Button>
+          <div className="space-y-3 border-t border-border pt-4">
+            <p className="text-sm font-medium text-muted-foreground">{t('lang.switch')}</p>
+            <LanguageSwitcher />
+          </div>
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="text-sm font-medium text-muted-foreground">{t('theme.toggle')}</p>
+            <ThemeToggle />
+          </div>
+          <div className="flex justify-end">
+            <Button variant="destructive" onClick={handleLogout}>
+              {t('auth.logout')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
