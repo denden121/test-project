@@ -13,7 +13,7 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models import User
-from app.schemas import GoogleTokenRequest, Token, UserCreate, UserResponse
+from app.schemas import GoogleTokenRequest, Token, UserCreate, UserResponse, UserUpdate
 
 router = APIRouter()
 
@@ -154,4 +154,18 @@ async def login_google(
 
 @router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)):
+    return UserResponse.model_validate(current_user)
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить профиль (фото и т.д.)."""
+    if data.avatar_url is not None:
+        current_user.avatar_url = data.avatar_url if data.avatar_url.strip() else None
+    await db.flush()
+    await db.refresh(current_user)
     return UserResponse.model_validate(current_user)

@@ -23,6 +23,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
 
     wishlists: Mapped[list["Wishlist"]] = relationship(
         "Wishlist",

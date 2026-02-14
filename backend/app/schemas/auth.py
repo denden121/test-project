@@ -24,9 +24,15 @@ class UserResponse(BaseModel):
     id: int
     email: str
     created_at: datetime
+    avatar_url: str | None = None
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    """Обновление профиля (аватар и т.д.)."""
+    avatar_url: str | None = None
 
 
 class Token(BaseModel):

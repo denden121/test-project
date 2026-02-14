@@ -48,6 +48,7 @@ async def init_db():
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255) NULL",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP NULL",
             "CREATE INDEX IF NOT EXISTS ix_users_password_reset_token ON users(password_reset_token)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(2048) NULL",
         ):
             try:
                 await conn.execute(text(stmt))

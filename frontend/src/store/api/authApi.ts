@@ -5,6 +5,7 @@ import { API_URL } from '@/lib/api'
 type LoginRequest = { email: string; password: string }
 type LoginResponse = { access_token: string; user: User }
 type GoogleLoginRequest = { code: string; redirect_uri: string }
+type UserUpdateRequest = { avatar_url?: string | null }
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -29,6 +30,9 @@ export const authApi = createApi({
     getMe: builder.query<User, void>({
       query: () => ({ url: 'me' }),
     }),
+    updateMe: builder.mutation<User, UserUpdateRequest>({
+      query: (body) => ({ url: 'me', method: 'PATCH', body }),
+    }),
   }),
 })
 
@@ -37,4 +41,5 @@ export const {
   useRegisterMutation,
   useLoginWithGoogleMutation,
   useLazyGetMeQuery,
+  useUpdateMeMutation,
 } = authApi

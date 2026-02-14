@@ -3,6 +3,7 @@ from app.schemas.auth import (
     Token,
     UserCreate,
     UserResponse,
+    UserUpdate,
 )
 from app.schemas.contribution import (
     ContributionCreate,
@@ -42,6 +43,7 @@ __all__ = [
     "Token",
     "UserCreate",
     "UserResponse",
+    "UserUpdate",
     "FetchProductRequest",
     "FetchProductResponse",
     "WishlistCreate",

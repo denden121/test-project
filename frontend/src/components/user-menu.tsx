@@ -41,12 +41,21 @@ export function UserMenu() {
           )}
           aria-label={t('nav.profile')}
         >
-          <span
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
-            aria-hidden
-          >
-            {getInitial(user.email)}
-          </span>
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt=""
+              className="size-8 shrink-0 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
+              aria-hidden
+            >
+              {getInitial(user.email)}
+            </span>
+          )}
           <span className="max-w-[120px] truncate text-left text-sm text-foreground sm:max-w-[180px]">
             {user.email}
           </span>
@@ -55,12 +64,21 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="flex items-center gap-3 px-2 py-2">
-          <span
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
-            aria-hidden
-          >
-            {getInitial(user.email)}
-          </span>
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt=""
+              className="size-9 shrink-0 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
+              aria-hidden
+            >
+              {getInitial(user.email)}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{user.email}</p>
             <p className="text-xs text-muted-foreground">{t('profile.account')}</p>
