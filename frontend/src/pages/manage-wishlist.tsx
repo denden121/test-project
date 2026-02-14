@@ -40,6 +40,31 @@ function toNum(v: number | string | null | undefined): number {
   return typeof v === 'string' ? parseFloat(v) || 0 : v
 }
 
+function daysUntilEvent(eventDate: string | null, t: (k: string) => string): string | null {
+  if (!eventDate) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const end = new Date(eventDate)
+  end.setHours(0, 0, 0, 0)
+  const diffMs = end.getTime() - today.getTime()
+  const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000))
+  if (diffDays === 0) return t('wishlist.daysUntil_today')
+  if (diffDays === 1) return t('wishlist.daysUntil_tomorrow')
+  if (diffDays === -1) return t('wishlist.daysUntil_yesterday')
+  if (diffDays > 1 && diffDays <= 31) {
+    const key =
+      diffDays === 1
+        ? 'wishlist.daysUntil_inDays_one'
+        : diffDays >= 2 && diffDays <= 4
+          ? 'wishlist.daysUntil_inDays_few'
+          : 'wishlist.daysUntil_inDays_many'
+    return t(key).replace('{{n}}', String(diffDays))
+  }
+  if (diffDays < 0) return t('wishlist.daysUntil_past').replace('{{n}}', String(-diffDays))
+  if (diffDays > 31) return t('wishlist.daysUntil_inDays_many').replace('{{n}}', String(diffDays))
+  return null
+}
+
 type ItemFormValues = {
   title: string
   link: string
@@ -310,6 +335,7 @@ export function ManageWishlist() {
   if (error && !wishlist) return <p className="text-destructive">{t('common.error')}: {error}</p>
   if (!wishlist) return <p className="text-muted-foreground">{t('common.notFound')}</p>
 
+  const daysLabel = daysUntilEvent(wishlist.event_date, t)
   return (
     <div className="space-y-4">
       {/* Header: back, title, kebab */}
@@ -319,9 +345,16 @@ export function ManageWishlist() {
             <ChevronLeft className="size-6" aria-hidden />
           </Link>
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-center text-lg font-semibold" id="wishlist-title">
-          {wishlist.title}
-        </h1>
+        <div className="min-w-0 flex-1 text-center">
+          <h1 className="truncate text-lg font-semibold" id="wishlist-title">
+            {wishlist.title}
+          </h1>
+          {daysLabel && (
+            <span className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+              {daysLabel}
+            </span>
+          )}
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="shrink-0" aria-label={t('wishlist.manage')}>
@@ -555,7 +588,7 @@ function ItemRow({
   t: (k: string) => string
 }) {
   const [expanded, setExpanded] = useState(false)
-  const hasExtra = Boolean(item.link || item.is_reserved || (item.price != null && Number(item.price) > 0 && toNum(item.total_contributed) > 0))
+  const hasExtra = Boolean(item.link)
 
   return (
     <Card>
@@ -583,6 +616,21 @@ function ItemRow({
                 <p className="text-sm text-primary">
                   {typeof item.price === 'number' ? item.price.toLocaleString() : item.price} {currency}
                 </p>
+              )}
+              {!item.is_reserved && item.price != null && Number(item.price) > 0 && (
+                <div className="mt-1 space-y-0.5">
+                  <p className="text-xs text-muted-foreground">
+                    {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {currency}
+                  </p>
+                  <div className="h-1 w-20 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${Math.min(100, (toNum(item.total_contributed) / toNum(item.price)) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               )}
             </div>
             <DropdownMenu>
@@ -613,33 +661,16 @@ function ItemRow({
               <ChevronDown className={`size-3.5 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
             </button>
           )}
-          {expanded && hasExtra && (
-            <div className="mt-2 space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
-              {item.link && (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block truncate text-primary underline"
-                >
-                  {item.link}
-                </a>
-              )}
-              {item.price != null && Number(item.price) > 0 && (
-                <div className="space-y-0.5">
-                  <p>
-                    {t('wishlist.collected')} {toNum(item.total_contributed)} {t('wishlist.of')} {toNum(item.price)} {currency}
-                  </p>
-                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${Math.min(100, (toNum(item.total_contributed) / toNum(item.price)) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+          {expanded && hasExtra && item.link && (
+            <div className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block truncate text-primary underline"
+              >
+                {item.link}
+              </a>
             </div>
           )}
         </div>
