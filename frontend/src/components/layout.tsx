@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button'
 import { BottomNav } from '@/components/bottom-nav'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { UserMenu } from '@/components/user-menu'
 import { useAuth } from '@/hooks/use-auth'
 import { useI18n } from '@/contexts/i18n-context'
 
 export function Layout() {
   const { t } = useI18n()
-  const { token, user, logout } = useAuth()
+  const { token } = useAuth()
 
   return (
     <div className="min-h-svh bg-background font-sans text-foreground">
@@ -29,13 +30,7 @@ export function Layout() {
                 <Button size="sm" asChild className="hidden sm:inline-flex">
                   <Link to="/wishlists/new">{t('nav.createList')}</Link>
                 </Button>
-                <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
-                  <Link to="/profile">{t('nav.profile')}</Link>
-                </Button>
-                <span className="hidden text-sm text-muted-foreground lg:inline">{user?.email}</span>
-                <Button variant="outline" size="sm" onClick={logout} className="hidden sm:inline-flex">
-                  {t('auth.logout')}
-                </Button>
+                <UserMenu />
               </>
             ) : (
               <Button size="sm" asChild className="hidden sm:inline-flex">
