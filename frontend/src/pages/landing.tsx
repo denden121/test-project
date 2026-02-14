@@ -55,7 +55,7 @@ export function Landing() {
             <Link to="/login">{t('landing.getStarted')}</Link>
           </Button>
           <span className="text-sm text-muted-foreground">{t('landing.haveAccount')}</span>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="secondary" size="lg" asChild>
             <Link to="/login">{t('auth.login')}</Link>
           </Button>
         </div>

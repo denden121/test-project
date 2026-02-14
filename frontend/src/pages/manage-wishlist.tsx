@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import useWebSocket from 'react-use-websocket'
 import axios from 'axios'
 import { Plus } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
@@ -88,6 +89,29 @@ export function ManageWishlist() {
       .catch((e) => setError(e.response?.data?.detail ?? e.message))
       .finally(() => setLoading(false))
   }, [creatorSecret])
+
+  const wsUrl =
+    !wishlist?.slug || !creatorSecret
+      ? null
+      : API_URL.startsWith('http')
+        ? (() => {
+            const u = new URL(API_URL)
+            const proto = u.protocol === 'https:' ? 'wss' : 'ws'
+            const path = u.pathname.replace(/\/$/, '') || ''
+            return `${proto}://${u.host}${path}/wishlists/ws/${wishlist.slug}`
+          })()
+        : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${API_URL}/wishlists/ws/${wishlist.slug}`
+
+  useWebSocket(wsUrl, {
+    onMessage: () => {
+      if (!creatorSecret) return
+      axios
+        .get<WishlistManageDetailResponse>(`${API_URL}/wishlists/m/${creatorSecret}`)
+        .then((r) => setWishlist(r.data))
+        .catch(() => {})
+    },
+    shouldReconnect: () => true,
+  })
 
   useEffect(() => {
     if (wishlist) {

@@ -90,6 +90,16 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+  /* Убираем стрелки (спиннеры) у полей type="number" */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
 /* 8pt grid spacing (8, 16, 24, 32, 48 px) — используйте gap-2 gap-4 gap-6 gap-8 gap-12, p-2 p-4 и т.д. */
