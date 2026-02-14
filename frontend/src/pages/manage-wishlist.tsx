@@ -362,18 +362,6 @@ export function ManageWishlist() {
         </Button>
       </div>
 
-      {/* Sort / filter bar */}
-      <div className="flex items-center justify-between border-b border-border pb-2 text-sm">
-        <button type="button" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground" onClick={() => {}} disabled>
-          <ArrowUpDown className="size-4 shrink-0" aria-hidden />
-          {t('wishlist.configureOrder')}
-        </button>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <span>{t('wishlist.allGifts')}</span>
-          <ChevronDown className="size-4 shrink-0" aria-hidden />
-        </div>
-      </div>
-
       <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
         <DialogContent>
           <DialogHeader>

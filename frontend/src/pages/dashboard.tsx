@@ -56,11 +56,6 @@ export function Dashboard() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <div>
                     <CardTitle className="text-lg">{w.title}</CardTitle>
-                    {(w.occasion || w.event_date) && (
-                      <p className="mt-0.5 text-xs font-normal text-muted-foreground">
-                        {[w.occasion, w.event_date].filter(Boolean).join(' · ')}
-                      </p>
-                    )}
                   </div>
                   <Button variant="outline" size="sm" asChild>
                     <Link to={`/wishlists/manage/${w.creator_secret}`}>
