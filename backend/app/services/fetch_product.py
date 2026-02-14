@@ -12,6 +12,16 @@ from bs4 import BeautifulSoup
 FETCH_TIMEOUT = 10.0
 FETCH_MAX_BYTES = 1_000_000  # 1 MB
 
+# Заголовки как у браузера — многие сайты (Ozon, Wildberries и др.) отдают 403 боту
+BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+}
+
 
 def _normalize_url(url: str) -> str:
     url = url.strip()
@@ -113,12 +123,24 @@ async def fetch_product(url: str) -> dict:
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
         raise ValueError("Допустимы только http и https")
+    # Referer с того же хоста иногда снимает 403
+    headers = dict(BROWSER_HEADERS)
+    headers["Referer"] = f"{parsed.scheme}://{parsed.netloc}/"
     async with httpx.AsyncClient(
         follow_redirects=True,
         timeout=FETCH_TIMEOUT,
-        headers={"User-Agent": "WishlistBot/1.0 (product metadata fetcher)"},
+        headers=headers,
     ) as client:
         response = await client.get(url)
+        if response.status_code == 403:
+            raise ValueError(
+                "Сайт не разрешает автоматическую загрузку данных (403). "
+                "Введите название, цену и ссылку на картинку вручную или вставьте ссылку на другой магазин."
+            )
+        if response.status_code == 401:
+            raise ValueError("Страница доступна только после входа. Введите данные вручную.")
+        if response.status_code == 429:
+            raise ValueError("Слишком много запросов к этому сайту. Попробуйте позже.")
         response.raise_for_status()
         content_type = (response.headers.get("content-type") or "").lower()
         if "text/html" not in content_type and "application/xhtml" not in content_type:
