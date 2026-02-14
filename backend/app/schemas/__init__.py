@@ -1,5 +1,7 @@
 from app.schemas.auth import (
+    ForgotPasswordRequest,
     GoogleTokenRequest,
+    ResetPasswordRequest,
     Token,
     UserCreate,
     UserResponse,
@@ -34,7 +36,9 @@ __all__ = [
     "ContributionCreate",
     "ContributionCreatedResponse",
     "ContributionResponse",
+    "ForgotPasswordRequest",
     "GoogleTokenRequest",
+    "ResetPasswordRequest",
     "ItemCreate",
     "ItemResponse",
     "ReservationCreate",

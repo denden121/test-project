@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     google_client_secret: str | None = Field(default=None, validation_alias="GOOGLE_CLIENT_SECRET")
     # Папка для загруженных файлов (аватары и т.д.)
     upload_dir: str = Field(default="uploads", validation_alias="UPLOAD_DIR")
+    # Восстановление пароля: базовый URL фронта для ссылки в письме
+    frontend_url: str = Field(default="http://localhost:5173", validation_alias="FRONTEND_URL")
+    # Resend API key — если задан, при «забыли пароль» отправляется письмо
+    resend_api_key: str | None = Field(default=None, validation_alias="RESEND_API_KEY")
+    resend_from_email: str = Field(default="onboarding@resend.dev", validation_alias="RESEND_FROM_EMAIL")
 
     model_config = {"env_file": ".env"}
 

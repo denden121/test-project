@@ -1,4 +1,7 @@
 import os
+import secrets
+from datetime import datetime, timezone, timedelta
+
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy import select
@@ -14,7 +17,16 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models import User
-from app.schemas import GoogleTokenRequest, Token, UserCreate, UserResponse, UserUpdate
+from app.schemas import (
+    ForgotPasswordRequest,
+    GoogleTokenRequest,
+    ResetPasswordRequest,
+    Token,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+from app.services.email import send_password_reset_email
 
 router = APIRouter()
 
@@ -207,3 +219,55 @@ async def upload_avatar(
     await db.flush()
     await db.refresh(current_user)
     return UserResponse.model_validate(current_user)
+
+
+RESET_TOKEN_EXPIRE = timedelta(hours=1)
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Запросить сброс пароля. Если email зарегистрирован и не только OAuth —
+    выставляем токен и при настроенном RESEND_API_KEY отправляем письмо со ссылкой.
+    Всегда возвращаем один и тот же ответ (не раскрываем, есть ли такой email).
+    """
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+    if user and user.hashed_password is not None:
+        user.password_reset_token = secrets.token_urlsafe(32)
+        user.password_reset_expires = datetime.now(timezone.utc) + RESET_TOKEN_EXPIRE
+        await db.flush()
+        base = settings.frontend_url.rstrip("/")
+        reset_link = f"{base}/reset-password?token={user.password_reset_token}"
+        await send_password_reset_email(user.email, reset_link)
+    return {"detail": "Если такой email зарегистрирован, вы получите письмо со ссылкой для сброса пароля."}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Сбросить пароль по токену из ссылки в письме. Токен действителен 1 час.
+    """
+    result = await db.execute(
+        select(User).where(
+            User.password_reset_token == data.token,
+            User.password_reset_expires > datetime.now(timezone.utc),
+        )
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ссылка недействительна или истекла. Запросите сброс пароля снова.",
+        )
+    user.hashed_password = get_password_hash(data.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    await db.flush()
+    return {"detail": "Пароль изменён. Теперь можно войти с новым паролем."}
